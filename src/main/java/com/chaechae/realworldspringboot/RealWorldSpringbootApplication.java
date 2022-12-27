@@ -9,5 +9,4 @@ public class RealWorldSpringbootApplication {
 	public static void main(String[] args) {
 		SpringApplication.run(RealWorldSpringbootApplication.class, args);
 	}
-
 }
