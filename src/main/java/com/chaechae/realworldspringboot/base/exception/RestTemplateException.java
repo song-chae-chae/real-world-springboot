@@ -10,9 +10,14 @@ import java.util.Map;
 @Slf4j
 @Getter
 public class RestTemplateException extends RealWorldException {
-    public RestTemplateException(RealWorldExceptionType restTemplateExceptionType, Map<String, String> validation) {
-        super(restTemplateExceptionType);
+    private final RestTemplateExceptionType restTemplateExceptionType;
+
+    public RestTemplateException(RestTemplateExceptionType restTemplateExceptionType, Map<String, Object> validation) {
+        this.restTemplateExceptionType = restTemplateExceptionType;
         this.validation = validation != null ? validation : new HashMap<>();
     }
 
+    public RealWorldExceptionType getExceptionType() {
+        return restTemplateExceptionType;
+    }
 }
