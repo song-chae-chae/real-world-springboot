@@ -1,6 +1,8 @@
 package com.chaechae.realworldspringboot.base.exception;
 
+import org.springframework.http.HttpStatus;
+
 public interface RealWorldExceptionType {
-    int getStatusCode();
+    HttpStatus getStatus();
     String getMessage();
 }
