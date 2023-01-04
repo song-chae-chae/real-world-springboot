@@ -172,4 +172,20 @@ class UserControllerTest {
 
                 .andDo(print());
     }
+
+    @Test
+    @DisplayName("회원 조회 성공")
+    public void 회원_조회_성공() throws Exception {
+        //given
+        User user = createUser();
+        User savedUser = userRepository.save(user);
+        Token token = tokenService.generateToken(savedUser.getId(), "USER");
+
+        //expedted
+        mockMvc.perform(get("/user")
+                        .header("Authorization", token.getToken()))
+                .andExpect(status().isOk())
+                .andDo(print());
+    }
+
 }
