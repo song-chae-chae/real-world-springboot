@@ -75,7 +75,7 @@ class UserRepositoryTest {
         User savedUser = userRepository.save(user);
 
         //when
-        User findUser = userRepository.findBySocialId("kakaoid").orElseThrow(() -> new RuntimeException("회원을 찾을 수 없습니다."));
+        User findUser = userRepository.findById(user.getId()).orElseThrow(() -> new RuntimeException("회원을 찾을 수 없습니다."));
 
         //then
         assertThat(findUser.getCreatedAt()).isNotNull();
