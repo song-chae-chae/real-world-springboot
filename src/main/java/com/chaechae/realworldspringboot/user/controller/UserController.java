@@ -39,7 +39,6 @@ public class UserController {
     @PutMapping("/user")
     public void updateUser(@RequestBody @Valid UpdateUserRequest request) {
         userService.updateUser(request);
-
     }
 
     @GetMapping("/user/test")
