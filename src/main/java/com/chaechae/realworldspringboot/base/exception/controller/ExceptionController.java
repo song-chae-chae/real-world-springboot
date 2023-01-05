@@ -1,5 +1,6 @@
 package com.chaechae.realworldspringboot.base.exception.controller;
 
+import com.chaechae.realworldspringboot.base.exception.RealWorldException;
 import com.chaechae.realworldspringboot.base.exception.RestTemplateException;
 import com.chaechae.realworldspringboot.base.exception.response.ErrorResponse;
 import lombok.extern.slf4j.Slf4j;
@@ -30,6 +31,18 @@ public class ExceptionController {
 
     @ExceptionHandler(RestTemplateException.class)
     public ResponseEntity<ErrorResponse> restTemplateExceptionHandler(RestTemplateException e) {
+        int statusCode = e.getExceptionType().getStatus().value();
+
+        ErrorResponse errorResponse = ErrorResponse.builder()
+                .code(String.valueOf(statusCode))
+                .message(e.getExceptionType().getMessage())
+                .validation(e.getValidation()).build();
+
+        return ResponseEntity.status(statusCode).body(errorResponse);
+    }
+
+    @ExceptionHandler(RealWorldException.class)
+    public ResponseEntity<ErrorResponse> realWorldExceptionHandler(RealWorldException e) {
         int statusCode = e.getExceptionType().getStatus().value();
 
         ErrorResponse errorResponse = ErrorResponse.builder()
