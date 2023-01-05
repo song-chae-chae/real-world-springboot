@@ -31,7 +31,7 @@ public class UserController {
     public ResponseEntity<UserResponse> currentUser(HttpServletResponse res) {
         String authorization = res.getHeader("Authorization");
         Long uid = tokenService.getUid(authorization);
-        UserResponse userResponse = userService.get(uid);
+        UserResponse userResponse = new UserResponse(userService.get(uid));
 
         return ResponseEntity.status(200).body(userResponse);
     }

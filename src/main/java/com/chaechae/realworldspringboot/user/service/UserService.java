@@ -48,10 +48,8 @@ public class UserService {
         return userRepository.save(user);
     }
 
-    public UserResponse get(Long id) {
-        User user = userRepository.findById(id).orElseThrow(() -> new UserException(UserExceptionType.USER_NOT_FOUND));
-
-        return new UserResponse(user);
+    public User get(Long id) {
+        return userRepository.findById(id).orElseThrow(() -> new UserException(UserExceptionType.USER_NOT_FOUND));
     }
 
     @Transactional

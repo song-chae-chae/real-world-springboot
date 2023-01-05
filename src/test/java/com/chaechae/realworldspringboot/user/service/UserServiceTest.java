@@ -56,7 +56,7 @@ class UserServiceTest {
         User user = userService.join(socialUserResponse);
 
         //then
-        UserResponse userResponse = userService.get(user.getId());
+        UserResponse userResponse = new UserResponse(userService.get(user.getId()));
         assertThat(userResponse.getUsername()).isEqualTo("nickname");
         assertThat(userResponse.getEmail()).isEqualTo("email");
     }
@@ -69,7 +69,7 @@ class UserServiceTest {
         User savedUser = userRepository.save(user);
 
         //when
-        UserResponse userResponse = userService.get(user.getId());
+        UserResponse userResponse = new UserResponse(userService.get(user.getId()));
 
         //then
         assertThat(userResponse.getUsername()).isEqualTo(user.getName());
