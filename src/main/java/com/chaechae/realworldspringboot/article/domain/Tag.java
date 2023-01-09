@@ -25,4 +25,12 @@ public class Tag {
         this.tagName = tagName;
         this.article = article;
     }
+
+    public void setArticle(Article article) {
+        if (this.article != null) {
+            this.article.getTags().remove(this);
+        }
+        this.article = article;
+        this.article.getTags().add(this);
+    }
 }
