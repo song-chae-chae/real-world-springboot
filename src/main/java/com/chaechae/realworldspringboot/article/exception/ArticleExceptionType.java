@@ -6,7 +6,8 @@ import org.springframework.http.HttpStatus;
 
 @Getter
 public enum ArticleExceptionType implements RealWorldExceptionType {
-    ARTICLE_NOT_FOUND(HttpStatus.NOT_FOUND, "게시글을 찾을 수 없습니다.");
+    ARTICLE_NOT_FOUND(HttpStatus.NOT_FOUND, "게시글을 찾을 수 없습니다."),
+    ARTICLE_UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "게시글에 대한 권한이 없습니다.");
 
     private final HttpStatus status;
     private final String message;
