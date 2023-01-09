@@ -8,6 +8,7 @@ import com.chaechae.realworldspringboot.profile.response.ProfileResponse;
 import com.chaechae.realworldspringboot.user.domain.Role;
 import com.chaechae.realworldspringboot.user.domain.User;
 import com.chaechae.realworldspringboot.user.repository.UserRepository;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -29,6 +30,11 @@ class ProfileServiceTest {
 
     @BeforeEach
     void clean() {
+        followRepository.deleteAll();
+        userRepository.deleteAll();
+    }
+    @AfterEach
+    void afterClean() {
         followRepository.deleteAll();
         userRepository.deleteAll();
     }
