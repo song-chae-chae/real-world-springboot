@@ -72,7 +72,7 @@ class ProfileControllerTest {
         User savedUser2 = userRepository.save(user2);
         Token token = tokenService.generateToken(user1.getId(), "USER");
 
-        FollowUser followUser = FollowUser.builder().id(2L).build();
+        FollowUser followUser = FollowUser.builder().id(savedUser2.getId()).build();
 
         //expected
         mockMvc.perform(post(("/profiles/follow"))
