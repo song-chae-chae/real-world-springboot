@@ -1,6 +1,7 @@
 package com.chaechae.realworldspringboot.article.domain;
 
 import com.chaechae.realworldspringboot.article.request.ArticleUpdate;
+import com.chaechae.realworldspringboot.base.BaseEntity;
 import com.chaechae.realworldspringboot.user.domain.User;
 import lombok.Builder;
 import lombok.Getter;
@@ -13,7 +14,7 @@ import java.util.Set;
 @Entity
 @Getter
 @NoArgsConstructor
-public class Article {
+public class Article extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;

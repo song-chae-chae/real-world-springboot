@@ -6,7 +6,9 @@ import com.chaechae.realworldspringboot.article.exception.ArticleException;
 import com.chaechae.realworldspringboot.article.repository.ArticleRepository;
 import com.chaechae.realworldspringboot.article.repository.TagRepository;
 import com.chaechae.realworldspringboot.article.request.ArticleCreate;
+import com.chaechae.realworldspringboot.article.request.ArticleSearch;
 import com.chaechae.realworldspringboot.article.request.ArticleUpdate;
+import com.chaechae.realworldspringboot.article.response.ArticleResponse;
 import com.chaechae.realworldspringboot.user.domain.Role;
 import com.chaechae.realworldspringboot.user.domain.User;
 import com.chaechae.realworldspringboot.user.repository.UserRepository;
@@ -21,6 +23,8 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -150,6 +154,41 @@ class ArticleServiceTest {
         assertThat(article.getTitle()).isEqualTo("제목");
         assertThat(article.getContent()).isEqualTo("내용");
         assertThat(new ArrayList<>(article.getTags()).get(0).getTagName()).isEqualTo("tag");
+    }
+
+    @Test
+    @DisplayName("게시글 목록 조회")
+    public void 게시글_목록_최신순조회() throws Exception {
+        //given
+        User user = User.builder()
+                .name("회원1")
+                .role(Role.USER)
+                .image("image")
+                .socialId("socialId")
+                .email("email")
+                .build();
+        User savedUser = userRepository.save(user);
+
+        List<Article> articles = IntStream.range(1, 31)
+                .mapToObj(i -> Article.builder()
+                        .title("제목 " + i)
+                        .content("내용 " + i)
+                        .description("설명 " + i)
+                        .user(savedUser)
+                        .build())
+                .collect(Collectors.toList());
+        articleRepository.saveAll(articles);
+        ArticleSearch articleSearch = ArticleSearch.builder()
+                .page(1)
+                .size(10).build();
+
+
+        //when
+        List<ArticleResponse> list = articleService.getList(savedUser.getId(), articleSearch);
+
+        //then
+        assertThat(list.size()).isEqualTo(10);
+        assertThat(list.get(0).getTitle()).isEqualTo("제목 30");
     }
 
     @Test

@@ -1,5 +1,6 @@
 package com.chaechae.realworldspringboot.article.controller;
 
+import com.chaechae.realworldspringboot.article.domain.Article;
 import com.chaechae.realworldspringboot.article.repository.ArticleRepository;
 import com.chaechae.realworldspringboot.article.repository.TagRepository;
 import com.chaechae.realworldspringboot.article.request.ArticleCreate;
@@ -13,6 +14,7 @@ import com.chaechae.realworldspringboot.user.domain.User;
 import com.chaechae.realworldspringboot.user.repository.UserRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
+import org.hamcrest.Matchers;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -22,10 +24,14 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
+import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -177,11 +183,32 @@ class ArticleControllerTest {
     @Test
     @DisplayName("게시글 리스트 조회")
     public void 게시글_리스트_조회() throws Exception {
-        //given
+        // given
+        User user = createUser("회원1");
+        User savedUser = userRepository.save(user);
+        Token token = tokenService.generateToken(savedUser.getId(), "USER");
 
-        //when
+        List<Article> articles = IntStream.range(1, 31)
+                .mapToObj(i -> Article.builder()
+                        .title("제목 " + i)
+                        .content("내용 " + i)
+                        .description("설명 " + i)
+                        .user(savedUser)
+                        .build())
+                .collect(Collectors.toList());
+        articleRepository.saveAll(articles);
 
-        //then
+        // expected
+        mockMvc.perform(MockMvcRequestBuilders.get("/articles")
+                        .contentType(APPLICATION_JSON)
+                        .header("Authorization", token.getToken())
+                        .param("page", "1")
+                        .param("size", "10"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()", Matchers.is(10)))
+                .andExpect(jsonPath("$[0].title").value("제목 30"))
+                .andExpect(jsonPath("$[0].content").value("내용 30"))
+                .andDo(print());
     }
 
     @Test
