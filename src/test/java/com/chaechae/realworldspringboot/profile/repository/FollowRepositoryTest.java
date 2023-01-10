@@ -1,5 +1,6 @@
 package com.chaechae.realworldspringboot.profile.repository;
 
+import com.chaechae.realworldspringboot.config.TestConfig;
 import com.chaechae.realworldspringboot.profile.domain.Follow;
 import com.chaechae.realworldspringboot.profile.exception.FollowException;
 import com.chaechae.realworldspringboot.profile.exception.FollowExceptionType;
@@ -12,6 +13,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,6 +21,7 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+@Import(TestConfig.class)
 @DataJpaTest
 class FollowRepositoryTest {
     @Autowired
