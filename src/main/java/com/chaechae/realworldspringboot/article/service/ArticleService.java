@@ -2,13 +2,12 @@ package com.chaechae.realworldspringboot.article.service;
 
 import com.chaechae.realworldspringboot.article.domain.Article;
 import com.chaechae.realworldspringboot.article.domain.Comment;
+import com.chaechae.realworldspringboot.article.domain.Favorite;
 import com.chaechae.realworldspringboot.article.domain.Tag;
-import com.chaechae.realworldspringboot.article.exception.ArticleException;
-import com.chaechae.realworldspringboot.article.exception.ArticleExceptionType;
-import com.chaechae.realworldspringboot.article.exception.CommentException;
-import com.chaechae.realworldspringboot.article.exception.CommentExceptionType;
+import com.chaechae.realworldspringboot.article.exception.*;
 import com.chaechae.realworldspringboot.article.repository.ArticleRepository;
 import com.chaechae.realworldspringboot.article.repository.CommentRepository;
+import com.chaechae.realworldspringboot.article.repository.FavoriteRepository;
 import com.chaechae.realworldspringboot.article.repository.TagRepository;
 import com.chaechae.realworldspringboot.article.request.*;
 import com.chaechae.realworldspringboot.article.response.ArticleResponse;
@@ -31,6 +30,7 @@ public class ArticleService {
     private final TagRepository tagRepository;
     private final ProfileService profileService;
     private final CommentRepository commentRepository;
+    private final FavoriteRepository favoriteRepository;
 
     public Long createArticle(Long id, ArticleCreate request) {
         User savedUser = userService.get(id);
@@ -150,5 +150,26 @@ public class ArticleService {
         }
 
         savedComment.update(commentUpdate);
+    }
+
+    @Transactional
+    public Long favoriteCreate(Long authId, Long articleId) {
+        Article savedArticle = articleRepository.findById(articleId)
+                .orElseThrow(() -> new ArticleException(ArticleExceptionType.ARTICLE_NOT_FOUND));
+        User savedUser = userService.get(authId);
+        Favorite favoriteCreate = Favorite.builder()
+                .article(savedArticle)
+                .user(savedUser)
+                .build();
+
+        return favoriteRepository.save(favoriteCreate).getId();
+    }
+
+    @Transactional
+    public void favoriteCancel(Long authId, Long articleId) {
+        Favorite savedFavorite = favoriteRepository.findByArticleIdAndUserId(articleId, authId)
+                .orElseThrow(() -> new FavoriteException(FavoriteExceptionType.FAVORITE_NOT_FOUND));
+
+        favoriteRepository.delete(savedFavorite);
     }
 }

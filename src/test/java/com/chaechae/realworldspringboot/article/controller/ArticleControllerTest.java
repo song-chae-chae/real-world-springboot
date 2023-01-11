@@ -6,6 +6,7 @@ import com.chaechae.realworldspringboot.article.exception.CommentException;
 import com.chaechae.realworldspringboot.article.exception.CommentExceptionType;
 import com.chaechae.realworldspringboot.article.repository.ArticleRepository;
 import com.chaechae.realworldspringboot.article.repository.CommentRepository;
+import com.chaechae.realworldspringboot.article.repository.FavoriteRepository;
 import com.chaechae.realworldspringboot.article.repository.TagRepository;
 import com.chaechae.realworldspringboot.article.request.ArticleCreate;
 import com.chaechae.realworldspringboot.article.request.ArticleUpdate;
@@ -75,8 +76,12 @@ class ArticleControllerTest {
     @Autowired
     CommentRepository commentRepository;
 
+    @Autowired
+    FavoriteRepository favoriteRepository;
+
     @BeforeEach
     void beforeClean() {
+        favoriteRepository.deleteAll();
         commentRepository.deleteAll();
         tagRepository.deleteAll();
         tokenRepository.deleteAll();
@@ -86,6 +91,7 @@ class ArticleControllerTest {
 
     @AfterEach
     void clean() {
+        favoriteRepository.deleteAll();
         commentRepository.deleteAll();
         tagRepository.deleteAll();
         tokenRepository.deleteAll();
@@ -346,5 +352,66 @@ class ArticleControllerTest {
         Comment updatedComment = commentRepository.findById(savedCommentID).orElseThrow(() -> new CommentException(CommentExceptionType.COMMENT_NOT_FOUND));
 
         assertThat(updatedComment.getContent()).isEqualTo("댓글 수정");
+    }
+
+    @Test
+    @DisplayName("좋아요 누르기")
+    public void 좋아요_누르기() throws Exception {
+        //given
+        User user = createUser("회원1");
+        User savedUser = userRepository.save(user);
+        Token token = tokenService.generateToken(savedUser.getId(), "USER");
+
+        List<String> tags = new ArrayList<>();
+        tags.add("tag1");
+
+        ArticleCreate create = ArticleCreate.builder()
+                .title("제목")
+                .description("description")
+                .content("내용")
+                .tags(tags)
+                .build();
+        Long articleId = articleService.createArticle(savedUser.getId(), create);
+
+        //when
+        mockMvc.perform(post("/articles/{articleId}/favorite", articleId)
+                        .header("Authorization", token.getToken())
+                        .contentType(APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andDo(print());
+
+        //then
+        assertThat(favoriteRepository.count()).isEqualTo(1);
+    }
+
+    @Test
+    @DisplayName("좋아요 삭제")
+    public void 좋아요_삭제() throws Exception {
+        //given
+        User user = createUser("회원1");
+        User savedUser = userRepository.save(user);
+        Token token = tokenService.generateToken(savedUser.getId(), "USER");
+
+        List<String> tags = new ArrayList<>();
+        tags.add("tag1");
+
+        ArticleCreate create = ArticleCreate.builder()
+                .title("제목")
+                .description("description")
+                .content("내용")
+                .tags(tags)
+                .build();
+        Long articleId = articleService.createArticle(savedUser.getId(), create);
+        articleService.favoriteCreate(savedUser.getId(), articleId);
+
+        //when
+        mockMvc.perform(delete("/articles/{articleId}/favorite", articleId)
+                        .header("Authorization", token.getToken())
+                        .contentType(APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andDo(print());
+
+        //then
+        assertThat(favoriteRepository.count()).isEqualTo(0);
     }
 }

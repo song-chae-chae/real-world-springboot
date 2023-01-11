@@ -7,6 +7,7 @@ import com.chaechae.realworldspringboot.user.response.UserLoginResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.parameters.P;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
@@ -52,5 +53,15 @@ public class ArticleController {
     @PatchMapping("/articles/{articleId}/comment/{commentId}")
     public void updateComment(@AuthenticationPrincipal UserLoginResponse authUser, @PathVariable Long commentId, @Valid @RequestBody CommentUpdate commentUpdate) {
         articleService.updateComment(authUser.getId(), commentId, commentUpdate);
+    }
+
+    @PostMapping("/articles/{articleId}/favorite")
+    public void favoriteCreate(@AuthenticationPrincipal UserLoginResponse authUser, @PathVariable Long articleId) {
+        articleService.favoriteCreate(authUser.getId(), articleId);
+    }
+
+    @DeleteMapping("/articles/{articleId}/favorite")
+    public void favoriteCancel(@AuthenticationPrincipal UserLoginResponse authUser, @PathVariable Long articleId) {
+        articleService.favoriteCancel(authUser.getId(), articleId);
     }
 }

@@ -2,12 +2,12 @@ package com.chaechae.realworldspringboot.article.service;
 
 import com.chaechae.realworldspringboot.article.domain.Article;
 import com.chaechae.realworldspringboot.article.domain.Comment;
+import com.chaechae.realworldspringboot.article.domain.Favorite;
 import com.chaechae.realworldspringboot.article.domain.Tag;
-import com.chaechae.realworldspringboot.article.exception.ArticleException;
-import com.chaechae.realworldspringboot.article.exception.CommentException;
-import com.chaechae.realworldspringboot.article.exception.CommentExceptionType;
+import com.chaechae.realworldspringboot.article.exception.*;
 import com.chaechae.realworldspringboot.article.repository.ArticleRepository;
 import com.chaechae.realworldspringboot.article.repository.CommentRepository;
+import com.chaechae.realworldspringboot.article.repository.FavoriteRepository;
 import com.chaechae.realworldspringboot.article.repository.TagRepository;
 import com.chaechae.realworldspringboot.article.request.*;
 import com.chaechae.realworldspringboot.article.response.ArticleResponse;
@@ -45,8 +45,12 @@ class ArticleServiceTest {
     @Autowired
     CommentRepository commentRepository;
 
+    @Autowired
+    FavoriteRepository favoriteRepository;
+
     @BeforeEach
     void clean() {
+        favoriteRepository.deleteAll();
         commentRepository.deleteAll();
         tagRepository.deleteAll();
         articleRepository.deleteAll();
@@ -346,4 +350,75 @@ class ArticleServiceTest {
         Comment findComment = commentRepository.findById(commentId).orElseThrow(() -> new CommentException(CommentExceptionType.COMMENT_NOT_FOUND));
         assertThat(findComment.getContent()).isEqualTo("댓글 수정");
     }
-}
+
+    @Test
+    @DisplayName("좋아요 누르기")
+    public void 좋아요_누르기() throws Exception {
+        //given
+        User user = User.builder()
+                .name("회원1")
+                .role(Role.USER)
+                .image("image")
+                .socialId("socialId")
+                .email("email")
+                .build();
+        User savedUser = userRepository.save(user);
+
+        List<String> tags = new ArrayList<>();
+        tags.add("tag");
+
+        ArticleCreate articleCreate = ArticleCreate.builder()
+                .title("제목")
+                .description("설명")
+                .content("내용")
+                .tags(tags)
+                .build();
+
+        Long savedArticleId = articleService.createArticle(savedUser.getId(), articleCreate);
+
+        //when
+        Long favoriteId = articleService.favoriteCreate(savedUser.getId(), savedArticleId);
+
+        //then
+        Favorite savedFavorite = favoriteRepository.findById(favoriteId).orElseThrow(() -> new FavoriteException(FavoriteExceptionType.FAVORITE_NOT_FOUND));
+
+        assertThat(savedFavorite.getUser().getId()).isEqualTo(savedUser.getId());
+        assertThat(savedFavorite.getArticle().getId()).isEqualTo(savedArticleId);
+    }
+
+    @Test
+    @DisplayName("좋아요 취소")
+    public void 좋아요_취소하기() throws Exception {
+        //given
+        User user = User.builder()
+                .name("회원1")
+                .role(Role.USER)
+                .image("image")
+                .socialId("socialId")
+                .email("email")
+                .build();
+        User savedUser = userRepository.save(user);
+
+        List<String> tags = new ArrayList<>();
+        tags.add("tag");
+
+        ArticleCreate articleCreate = ArticleCreate.builder()
+                .title("제목")
+                .description("설명")
+                .content("내용")
+                .tags(tags)
+                .build();
+
+        Long savedArticleId = articleService.createArticle(savedUser.getId(), articleCreate);
+        Long favoriteId = articleService.favoriteCreate(savedUser.getId(), savedArticleId);
+
+        //when
+        articleService.favoriteCancel(savedUser.getId(), savedArticleId);
+
+        //then
+        FavoriteException favoriteException = assertThrows(FavoriteException.class, () -> favoriteRepository.findByArticleIdAndUserId(savedArticleId, savedUser.getId())
+                .orElseThrow(() -> new FavoriteException(FavoriteExceptionType.FAVORITE_NOT_FOUND)));
+
+        assertThat(favoriteException.getExceptionType().getMessage()).isEqualTo(FavoriteExceptionType.FAVORITE_NOT_FOUND.getMessage());
+    }
+ }
