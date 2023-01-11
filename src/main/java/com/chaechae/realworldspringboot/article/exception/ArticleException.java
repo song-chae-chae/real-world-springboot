@@ -12,6 +12,6 @@ public class ArticleException extends RealWorldException {
 
     @Override
     public RealWorldExceptionType getExceptionType() {
-        return null;
+        return this.articleExceptionType;
     }
 }
