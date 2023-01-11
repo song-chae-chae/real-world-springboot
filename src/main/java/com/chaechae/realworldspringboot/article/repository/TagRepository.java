@@ -7,7 +7,7 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 @Repository
-public interface TagRepository extends JpaRepository<Tag, Long> {
+public interface TagRepository extends JpaRepository<Tag, Long>, TagRepositoryCustom {
     void deleteByArticleId(Long articleId);
 
     List<Tag> findByArticleId(Long articleId);
