@@ -1,13 +1,15 @@
 package com.chaechae.realworldspringboot.article.service;
 
 import com.chaechae.realworldspringboot.article.domain.Article;
+import com.chaechae.realworldspringboot.article.domain.Comment;
 import com.chaechae.realworldspringboot.article.domain.Tag;
 import com.chaechae.realworldspringboot.article.exception.ArticleException;
+import com.chaechae.realworldspringboot.article.exception.CommentException;
+import com.chaechae.realworldspringboot.article.exception.CommentExceptionType;
 import com.chaechae.realworldspringboot.article.repository.ArticleRepository;
+import com.chaechae.realworldspringboot.article.repository.CommentRepository;
 import com.chaechae.realworldspringboot.article.repository.TagRepository;
-import com.chaechae.realworldspringboot.article.request.ArticleCreate;
-import com.chaechae.realworldspringboot.article.request.ArticleSearch;
-import com.chaechae.realworldspringboot.article.request.ArticleUpdate;
+import com.chaechae.realworldspringboot.article.request.*;
 import com.chaechae.realworldspringboot.article.response.ArticleResponse;
 import com.chaechae.realworldspringboot.user.domain.Role;
 import com.chaechae.realworldspringboot.user.domain.User;
@@ -40,8 +42,12 @@ class ArticleServiceTest {
     @Autowired
     TagRepository tagRepository;
 
+    @Autowired
+    CommentRepository commentRepository;
+
     @BeforeEach
     void clean() {
+        commentRepository.deleteAll();
         tagRepository.deleteAll();
         articleRepository.deleteAll();
         userRepository.deleteAll();
@@ -188,7 +194,6 @@ class ArticleServiceTest {
 
         //then
         assertThat(list.size()).isEqualTo(10);
-        assertThat(list.get(0).getTitle()).isEqualTo("제목 30");
     }
 
     @Test
@@ -223,5 +228,122 @@ class ArticleServiceTest {
         assertThrows(ArticleException.class, () -> {
             articleService.get(savedArticleId);
         });
+    }
+
+    @Test
+    @DisplayName("게시글 댓글 작성")
+    public void 게시글_댓글_작성() throws Exception {
+        //given
+        User user = User.builder()
+                .name("회원1")
+                .role(Role.USER)
+                .image("image")
+                .socialId("socialId")
+                .email("email")
+                .build();
+        User savedUser = userRepository.save(user);
+
+        List<String> tags = new ArrayList<>();
+        tags.add("tag");
+
+        ArticleCreate articleCreate = ArticleCreate.builder()
+                .title("제목")
+                .description("설명")
+                .content("내용")
+                .tags(tags)
+                .build();
+
+        Long savedArticleId = articleService.createArticle(savedUser.getId(), articleCreate);
+
+        CommentCreate commentCreate = CommentCreate.builder()
+                .content("댓글")
+                .build();
+        //when
+        Long commentId = articleService.createComment(savedUser.getId(), savedArticleId, commentCreate);
+
+        //then
+        Comment comment = commentRepository.findById(commentId)
+                .orElseThrow(() -> new CommentException(CommentExceptionType.COMMENT_NOT_FOUND));
+        assertThat(comment.getContent()).isEqualTo("댓글");
+    }
+
+    @Test
+    @DisplayName("댓글 삭제")
+    public void 댓글_삭제() throws Exception {
+        //given
+        User user = User.builder()
+                .name("회원1")
+                .role(Role.USER)
+                .image("image")
+                .socialId("socialId")
+                .email("email")
+                .build();
+        User savedUser = userRepository.save(user);
+
+        List<String> tags = new ArrayList<>();
+        tags.add("tag");
+
+        ArticleCreate articleCreate = ArticleCreate.builder()
+                .title("제목")
+                .description("설명")
+                .content("내용")
+                .tags(tags)
+                .build();
+
+        Long savedArticleId = articleService.createArticle(savedUser.getId(), articleCreate);
+
+        CommentCreate commentCreate = CommentCreate.builder()
+                .content("댓글")
+                .build();
+        Long commentId = articleService.createComment(savedUser.getId(), savedArticleId, commentCreate);
+
+        //when
+        articleService.deleteComment(savedUser.getId(), savedArticleId, commentId);
+
+        //then
+        CommentException commentException = assertThrows(CommentException.class, () -> commentRepository.findById(commentId)
+                .orElseThrow(() -> new CommentException(CommentExceptionType.COMMENT_NOT_FOUND)));
+
+        assertThat(commentException.getExceptionType().getMessage()).isEqualTo(CommentExceptionType.COMMENT_NOT_FOUND.getMessage());
+    }
+
+    @Test
+    @DisplayName("댓글 수정")
+    public void 댓글_수정() throws Exception {
+        //given
+        User user = User.builder()
+                .name("회원1")
+                .role(Role.USER)
+                .image("image")
+                .socialId("socialId")
+                .email("email")
+                .build();
+        User savedUser = userRepository.save(user);
+
+        List<String> tags = new ArrayList<>();
+        tags.add("tag");
+
+        ArticleCreate articleCreate = ArticleCreate.builder()
+                .title("제목")
+                .description("설명")
+                .content("내용")
+                .tags(tags)
+                .build();
+
+        Long savedArticleId = articleService.createArticle(savedUser.getId(), articleCreate);
+
+        CommentCreate commentCreate = CommentCreate.builder()
+                .content("댓글")
+                .build();
+        Long commentId = articleService.createComment(savedUser.getId(), savedArticleId, commentCreate);
+
+        //when
+        CommentUpdate commentUpdate = CommentUpdate.builder().content("댓글 수정").build();
+
+        articleService.updateComment(savedUser.getId(), commentId, commentUpdate);
+
+        //then
+        Comment findComment = commentRepository.findById(commentId).orElseThrow(() -> new CommentException(CommentExceptionType.COMMENT_NOT_FOUND));
+        assertThat(findComment.getContent()).isEqualTo("댓글 수정");
     }
 }

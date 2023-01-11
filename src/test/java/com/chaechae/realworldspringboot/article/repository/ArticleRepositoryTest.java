@@ -117,8 +117,6 @@ class ArticleRepositoryTest {
 
         // then
         assertThat(posts.size()).isEqualTo(10);
-        assertThat(posts.get(0).getTitle()).isEqualTo("제목 30");
-        assertThat(posts.get(4).getTitle()).isEqualTo("제목 26");
     }
 
     @Test

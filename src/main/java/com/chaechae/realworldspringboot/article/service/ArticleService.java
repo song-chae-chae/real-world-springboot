@@ -1,14 +1,16 @@
 package com.chaechae.realworldspringboot.article.service;
 
 import com.chaechae.realworldspringboot.article.domain.Article;
+import com.chaechae.realworldspringboot.article.domain.Comment;
 import com.chaechae.realworldspringboot.article.domain.Tag;
 import com.chaechae.realworldspringboot.article.exception.ArticleException;
 import com.chaechae.realworldspringboot.article.exception.ArticleExceptionType;
+import com.chaechae.realworldspringboot.article.exception.CommentException;
+import com.chaechae.realworldspringboot.article.exception.CommentExceptionType;
 import com.chaechae.realworldspringboot.article.repository.ArticleRepository;
+import com.chaechae.realworldspringboot.article.repository.CommentRepository;
 import com.chaechae.realworldspringboot.article.repository.TagRepository;
-import com.chaechae.realworldspringboot.article.request.ArticleCreate;
-import com.chaechae.realworldspringboot.article.request.ArticleSearch;
-import com.chaechae.realworldspringboot.article.request.ArticleUpdate;
+import com.chaechae.realworldspringboot.article.request.*;
 import com.chaechae.realworldspringboot.article.response.ArticleResponse;
 import com.chaechae.realworldspringboot.profile.response.ProfileResponse;
 import com.chaechae.realworldspringboot.profile.service.ProfileService;
@@ -28,6 +30,7 @@ public class ArticleService {
     private final UserService userService;
     private final TagRepository tagRepository;
     private final ProfileService profileService;
+    private final CommentRepository commentRepository;
 
     public Long createArticle(Long id, ArticleCreate request) {
         User savedUser = userService.get(id);
@@ -111,5 +114,41 @@ public class ArticleService {
                         .following(profileResponse.isFollowing())
                         .build())
                 .build();
+    }
+
+    public Long createComment(Long authId, Long articleId, CommentCreate commentCreate) {
+        Article savedArticle = articleRepository.findById(articleId)
+                .orElseThrow(() -> new ArticleException(ArticleExceptionType.ARTICLE_NOT_FOUND));
+        User authUser = userService.get(authId);
+        Comment comment = Comment.builder()
+                .article(savedArticle)
+                .content(commentCreate.getContent())
+                .user(authUser)
+                .build();
+
+        return commentRepository.save(comment).getId();
+    }
+
+    public void deleteComment(Long authId, Long articleId, Long commentId) {
+        Comment savedComment = commentRepository.findById(commentId)
+                .orElseThrow(() -> new CommentException(CommentExceptionType.COMMENT_NOT_FOUND));
+
+        if (!(savedComment.getUser().getId().equals(authId))) {
+            throw new CommentException(CommentExceptionType.COMMENT_UNAUTHORIZED);
+        }
+
+        commentRepository.delete(savedComment);
+    }
+
+    @Transactional
+    public void updateComment(Long authId, Long commentId, CommentUpdate commentUpdate) {
+        Comment savedComment = commentRepository.findById(commentId)
+                .orElseThrow(() -> new CommentException(CommentExceptionType.COMMENT_NOT_FOUND));
+
+        if (!(savedComment.getUser().getId().equals(authId))) {
+            throw new CommentException(CommentExceptionType.COMMENT_UNAUTHORIZED);
+        }
+
+        savedComment.update(commentUpdate);
     }
 }

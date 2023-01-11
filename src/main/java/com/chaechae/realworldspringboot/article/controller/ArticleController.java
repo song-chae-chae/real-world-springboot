@@ -1,8 +1,6 @@
 package com.chaechae.realworldspringboot.article.controller;
 
-import com.chaechae.realworldspringboot.article.request.ArticleCreate;
-import com.chaechae.realworldspringboot.article.request.ArticleSearch;
-import com.chaechae.realworldspringboot.article.request.ArticleUpdate;
+import com.chaechae.realworldspringboot.article.request.*;
 import com.chaechae.realworldspringboot.article.response.ArticleResponse;
 import com.chaechae.realworldspringboot.article.service.ArticleService;
 import com.chaechae.realworldspringboot.user.response.UserLoginResponse;
@@ -39,5 +37,20 @@ public class ArticleController {
         List<ArticleResponse> list = articleService.getList(authUser.getId(), articleSearch);
 
         return ResponseEntity.status(200).body(list);
+    }
+
+    @PostMapping("/articles/{articleId}/comment")
+    public void createComment(@AuthenticationPrincipal UserLoginResponse authUser, @PathVariable Long articleId, @Valid @RequestBody CommentCreate commentCreate) {
+        articleService.createComment(authUser.getId(), articleId, commentCreate);
+    }
+
+    @DeleteMapping("/articles/{articleId}/comment/{commentId}")
+    public void deleteComment(@AuthenticationPrincipal UserLoginResponse authUser, @PathVariable Long articleId, @PathVariable Long commentId) {
+        articleService.deleteComment(authUser.getId(), articleId, commentId);
+    }
+
+    @PatchMapping("/articles/{articleId}/comment/{commentId}")
+    public void updateComment(@AuthenticationPrincipal UserLoginResponse authUser, @PathVariable Long commentId, @Valid @RequestBody CommentUpdate commentUpdate) {
+        articleService.updateComment(authUser.getId(), commentId, commentUpdate);
     }
 }
