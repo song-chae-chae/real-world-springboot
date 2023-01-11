@@ -32,8 +32,8 @@ public class ArticleService {
     private final CommentRepository commentRepository;
     private final FavoriteRepository favoriteRepository;
 
-    public Long createArticle(Long id, ArticleCreate request) {
-        User savedUser = userService.get(id);
+    public Long createArticle(Long authId, ArticleCreate request) {
+        User savedUser = userService.get(authId);
 
         Article article = Article.builder()
                 .title(request.getTitle())
