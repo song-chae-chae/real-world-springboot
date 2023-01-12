@@ -11,6 +11,8 @@ import com.chaechae.realworldspringboot.article.repository.FavoriteRepository;
 import com.chaechae.realworldspringboot.article.repository.TagRepository;
 import com.chaechae.realworldspringboot.article.request.*;
 import com.chaechae.realworldspringboot.article.response.ArticleResponse;
+import com.chaechae.realworldspringboot.article.response.CommentResponse;
+import com.chaechae.realworldspringboot.article.response.author.Author;
 import com.chaechae.realworldspringboot.profile.response.ProfileResponse;
 import com.chaechae.realworldspringboot.profile.service.ProfileService;
 import com.chaechae.realworldspringboot.user.domain.User;
@@ -105,7 +107,7 @@ public class ArticleService {
                 .content(article.getContent())
                 .description(article.getDescription())
                 .tags(article.getTags())
-                .author(ArticleResponse.Author.builder()
+                .author(Author.builder()
                         .id(profileResponse.getId())
                         .name(profileResponse.getName())
                         .image(profileResponse.getImage())
@@ -171,5 +173,22 @@ public class ArticleService {
                 .orElseThrow(() -> new FavoriteException(FavoriteExceptionType.FAVORITE_NOT_FOUND));
 
         favoriteRepository.delete(savedFavorite);
+    }
+
+    public List<CommentResponse> getCommentList(Long authId, Long articleId) {
+        List<Comment> comments = commentRepository.findByArticleId(articleId);
+
+        return comments.stream().map(comment -> convertCommentResponse(authId, comment)).collect(Collectors.toList());
+    }
+
+    private CommentResponse convertCommentResponse(Long authId, Comment comment) {
+        ProfileResponse profileResponse = profileService.get(authId, comment.getUser().getId());
+        return CommentResponse.builder()
+                .id(comment.getId())
+                .createdAt(comment.getCreatedAt())
+                .modifiedAt(comment.getModifiedAt())
+                .content(comment.getContent())
+                .author(new Author(profileResponse))
+                .build();
     }
 }

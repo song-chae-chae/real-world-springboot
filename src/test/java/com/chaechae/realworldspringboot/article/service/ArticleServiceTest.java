@@ -11,9 +11,11 @@ import com.chaechae.realworldspringboot.article.repository.FavoriteRepository;
 import com.chaechae.realworldspringboot.article.repository.TagRepository;
 import com.chaechae.realworldspringboot.article.request.*;
 import com.chaechae.realworldspringboot.article.response.ArticleResponse;
+import com.chaechae.realworldspringboot.article.response.CommentResponse;
 import com.chaechae.realworldspringboot.user.domain.Role;
 import com.chaechae.realworldspringboot.user.domain.User;
 import com.chaechae.realworldspringboot.user.repository.UserRepository;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -56,7 +58,14 @@ class ArticleServiceTest {
         articleRepository.deleteAll();
         userRepository.deleteAll();
     }
-
+    @AfterEach
+    void afterClean() {
+        favoriteRepository.deleteAll();
+        commentRepository.deleteAll();
+        tagRepository.deleteAll();
+        articleRepository.deleteAll();
+        userRepository.deleteAll();
+    }
     @Test
     @DisplayName("게시글 작성")
     public void 게시글_작성_성공() throws Exception {
@@ -350,6 +359,47 @@ class ArticleServiceTest {
         Comment findComment = commentRepository.findById(commentId).orElseThrow(() -> new CommentException(CommentExceptionType.COMMENT_NOT_FOUND));
         assertThat(findComment.getContent()).isEqualTo("댓글 수정");
     }
+
+    @Test
+    @DisplayName("댓글 목록 조회")
+    public void 댓글_목록_조회() throws Exception {
+        //given
+        User user = User.builder()
+                .name("회원1")
+                .role(Role.USER)
+                .image("image")
+                .socialId("socialId")
+                .email("email")
+                .build();
+        User savedUser = userRepository.save(user);
+
+        List<String> tags = new ArrayList<>();
+        tags.add("tag");
+
+        ArticleCreate articleCreate = ArticleCreate.builder()
+                .title("제목")
+                .description("설명")
+                .content("내용")
+                .tags(tags)
+                .build();
+
+        Long savedArticleId = articleService.createArticle(savedUser.getId(), articleCreate);
+
+        CommentCreate commentCreate = CommentCreate.builder().content("댓글").build();
+        CommentCreate commentCreate2 = CommentCreate.builder().content("댓글2").build();
+
+        Long commentId = articleService.createComment(savedUser.getId(), savedArticleId, commentCreate);
+        Long commentId2 = articleService.createComment(savedUser.getId(), savedArticleId, commentCreate2);
+
+        //when
+        List<CommentResponse> commentList = articleService.getCommentList(savedUser.getId(), savedArticleId);
+
+        //then
+        assertThat(commentList.size()).isEqualTo(2);
+        assertThat(commentList.get(0).getContent()).isEqualTo("댓글");
+        assertThat(commentList.get(0).getAuthor().isFollowing()).isEqualTo(false);
+    }
+
 
     @Test
     @DisplayName("좋아요 누르기")

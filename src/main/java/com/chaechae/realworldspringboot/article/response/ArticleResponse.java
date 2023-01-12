@@ -1,6 +1,7 @@
 package com.chaechae.realworldspringboot.article.response;
 
 import com.chaechae.realworldspringboot.article.domain.Tag;
+import com.chaechae.realworldspringboot.article.response.author.Author;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -32,23 +33,23 @@ public class ArticleResponse {
         this.author = author;
     }
 
-    @Getter
-    public static class Author {
-        private final Long id;
-        private final String name;
-        private final String email;
-        private final String image;
-        private final String socialId;
-        private final boolean following;
-
-        @Builder
-        public Author(Long id, String name, String email, String image, String socialId, boolean following) {
-            this.id = id;
-            this.name = name;
-            this.email = email;
-            this.image = image;
-            this.socialId = socialId;
-            this.following = following;
-        }
-    }
+//    @Getter
+//    public static class Author {
+//        private final Long id;
+//        private final String name;
+//        private final String email;
+//        private final String image;
+//        private final String socialId;
+//        private final boolean following;
+//
+//        @Builder
+//        public Author(Long id, String name, String email, String image, String socialId, boolean following) {
+//            this.id = id;
+//            this.name = name;
+//            this.email = email;
+//            this.image = image;
+//            this.socialId = socialId;
+//            this.following = following;
+//        }
+//    }
 }

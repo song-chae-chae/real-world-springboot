@@ -2,12 +2,12 @@ package com.chaechae.realworldspringboot.article.controller;
 
 import com.chaechae.realworldspringboot.article.request.*;
 import com.chaechae.realworldspringboot.article.response.ArticleResponse;
+import com.chaechae.realworldspringboot.article.response.CommentResponse;
 import com.chaechae.realworldspringboot.article.service.ArticleService;
 import com.chaechae.realworldspringboot.user.response.UserLoginResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.parameters.P;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
@@ -37,6 +37,12 @@ public class ArticleController {
     public ResponseEntity<List<ArticleResponse>> getAllArticles(@AuthenticationPrincipal UserLoginResponse authUser, @ModelAttribute ArticleSearch articleSearch) {
         List<ArticleResponse> list = articleService.getList(authUser.getId(), articleSearch);
 
+        return ResponseEntity.status(200).body(list);
+    }
+
+    @GetMapping("/articles/{articleId}/comments")
+    public ResponseEntity<List<CommentResponse>> getComments(@AuthenticationPrincipal UserLoginResponse authUser, @PathVariable Long articleId) {
+        List<CommentResponse> list = articleService.getCommentList(authUser.getId(), articleId);
         return ResponseEntity.status(200).body(list);
     }
 

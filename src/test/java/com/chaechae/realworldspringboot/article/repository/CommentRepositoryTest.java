@@ -13,6 +13,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.context.annotation.Import;
 
+import java.util.List;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 @Import(TestConfig.class)
@@ -98,5 +100,38 @@ class CommentRepositoryTest {
 
         //then
         assertThat(commentRepository.count()).isEqualTo(0);
+    }
+    @Test
+    @DisplayName("아티클 아이디로 댓글 조회")
+    public void 댓글_조회_아티클아이디() throws Exception {
+        //given
+        User user = createUser("회원1");
+        User savedUser = userRepository.save(user);
+
+        Article article = Article.builder()
+                .user(savedUser)
+                .title("제목")
+                .description("설명")
+                .content("내용")
+                .build();
+        Article savedArticle = articleRepository.save(article);
+
+        Comment comment = Comment.builder()
+                .user(savedUser)
+                .article(savedArticle)
+                .content("댓글").build();
+        Comment comment2 = Comment.builder()
+                .user(savedUser)
+                .article(savedArticle)
+                .content("댓글2").build();
+        Comment savedComment = commentRepository.save(comment);
+        Comment savedComment2 = commentRepository.save(comment2);
+
+        //when
+        List<Comment> byArticleId = commentRepository.findByArticleId(savedArticle.getId());
+
+        //then
+        assertThat(byArticleId.size()).isEqualTo(2);
+        assertThat(byArticleId.get(0).getContent()).isEqualTo("댓글");
     }
 }

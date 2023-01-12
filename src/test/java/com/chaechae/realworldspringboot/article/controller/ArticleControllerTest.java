@@ -39,6 +39,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.Matchers.hasSize;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
@@ -352,6 +353,41 @@ class ArticleControllerTest {
         Comment updatedComment = commentRepository.findById(savedCommentID).orElseThrow(() -> new CommentException(CommentExceptionType.COMMENT_NOT_FOUND));
 
         assertThat(updatedComment.getContent()).isEqualTo("댓글 수정");
+    }
+
+    @Test
+    @DisplayName("댓글 목록 조회")
+    public void 댓글_목록_조회() throws Exception {
+        //given
+        User user = createUser("회원1");
+        User savedUser = userRepository.save(user);
+        Token token = tokenService.generateToken(savedUser.getId(), "USER");
+
+        List<String> tags = new ArrayList<>();
+        tags.add("tag1");
+
+        ArticleCreate create = ArticleCreate.builder()
+                .title("제목")
+                .description("description")
+                .content("내용")
+                .tags(tags)
+                .build();
+        Long articleId = articleService.createArticle(savedUser.getId(), create);
+
+        CommentCreate commentCreate = CommentCreate.builder().content("댓글").build();
+        CommentCreate commentCreate2 = CommentCreate.builder().content("댓글2").build();
+        Long savedCommentID = articleService.createComment(savedUser.getId(), articleId, commentCreate);
+        Long savedCommentID2 = articleService.createComment(savedUser.getId(), articleId, commentCreate2);
+
+
+        //when
+        mockMvc.perform(get("/articles/{articleId}/comments", articleId)
+                        .header("Authorization", token.getToken())
+                        .contentType(APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(2)))
+                .andExpect(jsonPath("$[0].content").value("댓글"))
+                .andDo(print());
     }
 
     @Test
