@@ -12,6 +12,7 @@ import com.chaechae.realworldspringboot.user.domain.Role;
 import com.chaechae.realworldspringboot.user.domain.User;
 import com.chaechae.realworldspringboot.user.repository.UserRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -46,6 +47,12 @@ class ProfileControllerTest {
 
     @BeforeEach
     void clean() {
+        followRepository.deleteAll();
+        tokenRepository.deleteAll();
+        userRepository.deleteAll();
+    }
+    @AfterEach
+    void afterClean() {
         followRepository.deleteAll();
         tokenRepository.deleteAll();
         userRepository.deleteAll();
