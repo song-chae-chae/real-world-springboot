@@ -9,6 +9,7 @@ import com.chaechae.realworldspringboot.user.repository.UserRepository;
 import com.chaechae.realworldspringboot.user.request.SocialLoginRequest;
 import com.chaechae.realworldspringboot.user.request.UpdateUserRequest;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -44,6 +45,12 @@ class UserControllerTest {
 
     @BeforeEach
     void clean() {
+        tokenRepository.deleteAll();
+        userRepository.deleteAll();
+    }
+
+    @AfterEach
+    void afterClean() {
         tokenRepository.deleteAll();
         userRepository.deleteAll();
     }

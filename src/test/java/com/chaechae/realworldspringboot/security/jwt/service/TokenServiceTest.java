@@ -1,5 +1,6 @@
 package com.chaechae.realworldspringboot.security.jwt.service;
 
+import com.chaechae.realworldspringboot.article.repository.ArticleRepository;
 import com.chaechae.realworldspringboot.security.jwt.domain.RefreshToken;
 import com.chaechae.realworldspringboot.security.jwt.domain.Token;
 import com.chaechae.realworldspringboot.security.jwt.exception.TokenException;
@@ -12,6 +13,7 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -37,15 +39,26 @@ class TokenServiceTest {
     @Autowired
     TokenRepository tokenRepository;
 
+    @Autowired
+    ArticleRepository articleRepository;
+
     @Value("${jwt.secret-key}")
     String secretKey;
 
     @BeforeEach
     void setUp() {
         tokenRepository.deleteAll();
+        articleRepository.deleteAll();
         userRepository.deleteAll();
 
         secretKey = Base64.getEncoder().encodeToString(secretKey.getBytes());
+    }
+
+    @AfterEach
+    void afterClean() {
+        tokenRepository.deleteAll();
+        articleRepository.deleteAll();
+        userRepository.deleteAll();
     }
 
     private User createUser() {

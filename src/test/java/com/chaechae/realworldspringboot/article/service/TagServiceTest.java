@@ -6,6 +6,7 @@ import com.chaechae.realworldspringboot.article.request.ArticleCreate;
 import com.chaechae.realworldspringboot.user.domain.Role;
 import com.chaechae.realworldspringboot.user.domain.User;
 import com.chaechae.realworldspringboot.user.repository.UserRepository;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -33,6 +34,12 @@ class TagServiceTest {
 
     @BeforeEach
     void clean() {
+        tagRepository.deleteAll();
+        articleRepository.deleteAll();
+        userRepository.deleteAll();
+    }
+    @AfterEach
+    void afterClean() {
         tagRepository.deleteAll();
         articleRepository.deleteAll();
         userRepository.deleteAll();

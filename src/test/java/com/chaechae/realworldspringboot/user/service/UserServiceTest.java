@@ -9,6 +9,7 @@ import com.chaechae.realworldspringboot.user.request.UpdateUserRequest;
 import com.chaechae.realworldspringboot.user.response.SocialUserResponse;
 import com.chaechae.realworldspringboot.user.response.UserResponse;
 import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -28,6 +29,11 @@ class UserServiceTest {
 
     @BeforeEach
     void clean() {
+        userRepository.deleteAll();
+    }
+
+    @AfterEach
+    void afterClean() {
         userRepository.deleteAll();
     }
 

@@ -3,6 +3,7 @@ package com.chaechae.realworldspringboot.user.repository;
 import com.chaechae.realworldspringboot.config.TestConfig;
 import com.chaechae.realworldspringboot.user.domain.Role;
 import com.chaechae.realworldspringboot.user.domain.User;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -22,6 +23,11 @@ class UserRepositoryTest {
 
     @BeforeEach
     void clean() {
+        userRepository.deleteAll();
+    }
+
+    @AfterEach
+    void afterClean() {
         userRepository.deleteAll();
     }
 
