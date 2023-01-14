@@ -91,9 +91,18 @@ public class ArticleService {
 
     @Transactional(readOnly = true)
     public List<ArticleResponse> getList(Long authId, ArticleSearch articleSearch) {
-        List<Article> list = articleRepository.getList(articleSearch);
+        List<Article> articleList;
+        if (articleSearch.getAuthor() != null) {
+            articleList = articleRepository.getArticleListByAuthor(articleSearch);
+        } else if (articleSearch.getFavorite() != null) {
+            articleList = articleRepository.getArticleListByUserFavorite(articleSearch);
+        } else if (articleSearch.getTag() != null) {
+            articleList = articleRepository.getArticleListByTag(articleSearch);
+        } else {
+            articleList = articleRepository.getList(articleSearch);
+        }
 
-        return list.stream().map(i -> convertArticleResponse(authId, i)).collect(Collectors.toList());
+        return articleList.stream().map(i -> convertArticleResponse(authId, i)).collect(Collectors.toList());
     }
 
     private ArticleResponse convertArticleResponse(Long authId, Article article) {
@@ -190,5 +199,11 @@ public class ArticleService {
                 .content(comment.getContent())
                 .author(new Author(profileResponse))
                 .build();
+    }
+
+    public List<ArticleResponse> getFeed(Long authId, ArticleSearch articleSearch) {
+        List<Article> feed = articleRepository.getFeed(authId, articleSearch);
+        System.out.println("feed count " + feed.size());
+        return feed.stream().map(article -> convertArticleResponse(authId, article)).collect(Collectors.toList());
     }
 }

@@ -31,6 +31,9 @@ public class Article extends BaseEntity {
     @OneToMany(mappedBy = "article")
     private List<Comment> comments = new ArrayList<>();
 
+    @OneToMany(mappedBy = "article")
+    private List<Favorite> favorites = new ArrayList<>();
+
     @ManyToOne
     @JoinColumn(name = "user_id")
     private User user;

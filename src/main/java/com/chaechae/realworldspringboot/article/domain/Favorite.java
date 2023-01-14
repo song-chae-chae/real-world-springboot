@@ -29,4 +29,12 @@ public class Favorite {
         this.article = article;
         this.user = user;
     }
+
+    public void setArticle(Article article) {
+        if (this.article != null) {
+            this.article.getFavorites().remove(this);
+        }
+        this.article = article;
+        this.article.getFavorites().add(this);
+    }
 }

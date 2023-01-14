@@ -40,6 +40,13 @@ public class ArticleController {
         return ResponseEntity.status(200).body(list);
     }
 
+    @GetMapping("/articles/feed")
+    public ResponseEntity<List<ArticleResponse>> getFeed(@AuthenticationPrincipal UserLoginResponse authUser, @ModelAttribute ArticleSearch articleSearch) {
+        List<ArticleResponse> feed = articleService.getFeed(authUser.getId(), articleSearch);
+
+        return ResponseEntity.status(200).body(feed);
+    }
+
     @GetMapping("/articles/{articleId}/comments")
     public ResponseEntity<List<CommentResponse>> getComments(@AuthenticationPrincipal UserLoginResponse authUser, @PathVariable Long articleId) {
         List<CommentResponse> list = articleService.getCommentList(authUser.getId(), articleId);

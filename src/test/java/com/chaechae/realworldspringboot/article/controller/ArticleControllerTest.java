@@ -13,6 +13,8 @@ import com.chaechae.realworldspringboot.article.request.ArticleUpdate;
 import com.chaechae.realworldspringboot.article.request.CommentCreate;
 import com.chaechae.realworldspringboot.article.request.CommentUpdate;
 import com.chaechae.realworldspringboot.article.service.ArticleService;
+import com.chaechae.realworldspringboot.profile.domain.Follow;
+import com.chaechae.realworldspringboot.profile.repository.FollowRepository;
 import com.chaechae.realworldspringboot.security.jwt.domain.Token;
 import com.chaechae.realworldspringboot.security.jwt.repository.TokenRepository;
 import com.chaechae.realworldspringboot.security.jwt.service.TokenService;
@@ -80,8 +82,12 @@ class ArticleControllerTest {
     @Autowired
     FavoriteRepository favoriteRepository;
 
+    @Autowired
+    FollowRepository followRepository;
+
     @BeforeEach
     void beforeClean() {
+        followRepository.deleteAll();
         favoriteRepository.deleteAll();
         commentRepository.deleteAll();
         tagRepository.deleteAll();
@@ -92,6 +98,7 @@ class ArticleControllerTest {
 
     @AfterEach
     void clean() {
+        followRepository.deleteAll();
         favoriteRepository.deleteAll();
         commentRepository.deleteAll();
         tagRepository.deleteAll();
@@ -227,6 +234,225 @@ class ArticleControllerTest {
                 .andExpect(jsonPath("$.length()", Matchers.is(10)))
                 .andExpect(jsonPath("$[0].title").value("제목 30"))
                 .andExpect(jsonPath("$[0].content").value("내용 30"))
+                .andDo(print());
+    }
+
+    @Test
+    @DisplayName("태그로 게시글 조회")
+    public void 게시글_조회_태그() throws Exception {
+        //given
+        User user = createUser("회원1");
+        User user2 = createUser("회원2");
+        User savedUser = userRepository.save(user);
+        User savedUser2 = userRepository.save(user2);
+
+        Token token = tokenService.generateToken(savedUser.getId(), "USER");
+
+        List<String> tags = new ArrayList<>();
+        tags.add("tag1");
+        tags.add("tag2");
+
+        List<String> tags2 = new ArrayList<>();
+        tags2.add("tag2");
+        tags2.add("tag3");
+
+        for (int i = 0; i < 5; i++) {
+            ArticleCreate articleCreate = ArticleCreate.builder()
+                    .title("제목 " + (i + 1))
+                    .content("내용 " + (i + 1))
+                    .description("설명 " + (i + 1))
+                    .tags(tags)
+                    .build();
+            articleService.createArticle(savedUser.getId(), articleCreate);
+
+            ArticleCreate articleCreate2 = ArticleCreate.builder()
+                    .title("title " + (i + 1))
+                    .content("content " + (i + 1))
+                    .description("description " + (i + 1))
+                    .tags(tags2)
+                    .build();
+            articleService.createArticle(savedUser2.getId(), articleCreate2);
+        }
+
+        //expected
+        mockMvc.perform(get("/articles")
+                        .header("Authorization", token.getToken())
+                        .contentType(APPLICATION_JSON)
+                        .param("page", "1")
+                        .param("size", "10")
+                        .param("tag", "tag2"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(10)))
+                .andDo(print());
+    }
+
+    @Test
+    @DisplayName("글쓴이 게시글 조회")
+    public void 게시글_조회_글쓴이() throws Exception {
+        //given
+        User user = createUser("회원1");
+        User user2 = createUser("회원2");
+        User savedUser = userRepository.save(user);
+        User savedUser2 = userRepository.save(user2);
+
+        Token token = tokenService.generateToken(savedUser.getId(), "USER");
+
+        List<String> tags = new ArrayList<>();
+        tags.add("tag1");
+        tags.add("tag2");
+
+        List<String> tags2 = new ArrayList<>();
+        tags2.add("tag2");
+        tags2.add("tag3");
+
+        for (int i = 0; i < 5; i++) {
+            ArticleCreate articleCreate = ArticleCreate.builder()
+                    .title("제목 " + (i + 1))
+                    .content("내용 " + (i + 1))
+                    .description("설명 " + (i + 1))
+                    .tags(tags)
+                    .build();
+            articleService.createArticle(savedUser.getId(), articleCreate);
+
+            ArticleCreate articleCreate2 = ArticleCreate.builder()
+                    .title("title " + (i + 1))
+                    .content("content " + (i + 1))
+                    .description("description " + (i + 1))
+                    .tags(tags2)
+                    .build();
+            articleService.createArticle(savedUser2.getId(), articleCreate2);
+        }
+
+        //expected
+        mockMvc.perform(get("/articles")
+                        .header("Authorization", token.getToken())
+                        .contentType(APPLICATION_JSON)
+                        .param("page", "1")
+                        .param("size", "10")
+                        .param("author", String.valueOf(savedUser.getId())))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(5)))
+                .andDo(print());
+    }
+
+    @Test
+    @DisplayName("해당 회원이 좋아요 누른 게시글 조회")
+    public void 게시글_조회_좋아요() throws Exception {
+        //given
+        User user = createUser("회원1");
+        User user2 = createUser("회원2");
+        User savedUser = userRepository.save(user);
+        User savedUser2 = userRepository.save(user2);
+
+        Token token = tokenService.generateToken(savedUser.getId(), "USER");
+
+        List<String> tags = new ArrayList<>();
+        tags.add("tag1");
+        tags.add("tag2");
+
+        List<String> tags2 = new ArrayList<>();
+        tags2.add("tag2");
+        tags2.add("tag3");
+
+        List<Long> savedArticleIdList = new ArrayList<>();
+        for (int i = 0; i < 5; i++) {
+            ArticleCreate articleCreate = ArticleCreate.builder()
+                    .title("제목 " + (i + 1))
+                    .content("내용 " + (i + 1))
+                    .description("설명 " + (i + 1))
+                    .tags(tags)
+                    .build();
+            savedArticleIdList.add(articleService.createArticle(savedUser.getId(), articleCreate));
+
+            ArticleCreate articleCreate2 = ArticleCreate.builder()
+                    .title("title " + (i + 1))
+                    .content("content " + (i + 1))
+                    .description("description " + (i + 1))
+                    .tags(tags2)
+                    .build();
+            savedArticleIdList.add(articleService.createArticle(savedUser2.getId(), articleCreate2));
+        }
+
+        articleService.favoriteCreate(savedUser.getId(), savedArticleIdList.get(0));
+        articleService.favoriteCreate(savedUser.getId(), savedArticleIdList.get(1));
+
+        //expected
+        mockMvc.perform(get("/articles")
+                        .header("Authorization", token.getToken())
+                        .contentType(APPLICATION_JSON)
+                        .param("page", "1")
+                        .param("size", "10")
+                        .param("favorite", String.valueOf(savedUser.getId())))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(2)))
+                .andExpect(jsonPath("$[0].content").value(articleRepository.findById(savedArticleIdList.get(1)).get().getContent()))
+                .andExpect(jsonPath("$[1].content").value(articleRepository.findById(savedArticleIdList.get(0)).get().getContent()))
+                .andDo(print());
+    }
+
+    @Test
+    @DisplayName("내 피드 목록 가져오기(내 글 + 팔로우한 회원)")
+    public void 피드_조회() throws Exception {
+        //given
+        User user = createUser("회원1");
+        User user2 = createUser("회원2");
+        User user3 = createUser("회원3");
+        User savedUser = userRepository.save(user);
+        User savedUser2 = userRepository.save(user2);
+        User savedUser3 = userRepository.save(user3);
+
+        Follow follow = Follow.builder()
+                .follower(savedUser)
+                .followed(savedUser3)
+                .build();
+
+        followRepository.save(follow);
+
+        Token token = tokenService.generateToken(savedUser.getId(), "USER");
+
+        List<String> tags = new ArrayList<>();
+        tags.add("tag1");
+        tags.add("tag2");
+
+        List<String> tags2 = new ArrayList<>();
+        tags2.add("tag2");
+        tags2.add("tag3");
+
+        List<Long> savedArticleIdList = new ArrayList<>();
+        for (int i = 0; i < 5; i++) {
+            ArticleCreate articleCreate = ArticleCreate.builder()
+                    .title("제목 " + (i + 1))
+                    .content("내용 " + (i + 1))
+                    .description("설명 " + (i + 1))
+                    .tags(tags)
+                    .build();
+            savedArticleIdList.add(articleService.createArticle(savedUser.getId(), articleCreate));
+
+            ArticleCreate articleCreate2 = ArticleCreate.builder()
+                    .title("title " + (i + 1))
+                    .content("content " + (i + 1))
+                    .description("description " + (i + 1))
+                    .tags(tags2)
+                    .build();
+            savedArticleIdList.add(articleService.createArticle(savedUser2.getId(), articleCreate2));
+
+            ArticleCreate articleCreate3 = ArticleCreate.builder()
+                    .title("팔로잉 제목 " + (i + 1))
+                    .content("팔로잉 내용 " + (i + 1))
+                    .description("팔로잉 설명 " + (i + 1))
+                    .tags(tags2)
+                    .build();
+            savedArticleIdList.add(articleService.createArticle(savedUser3.getId(), articleCreate3));
+        }
+
+        //expected
+        mockMvc.perform(get("/articles/feed")
+                        .header("Authorization", token.getToken())
+                        .contentType(APPLICATION_JSON)
+                        .param("page", "1")
+                        .param("size", "10"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(10)))
                 .andDo(print());
     }
 

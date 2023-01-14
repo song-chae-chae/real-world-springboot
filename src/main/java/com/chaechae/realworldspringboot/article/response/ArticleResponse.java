@@ -7,7 +7,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Getter
 @NoArgsConstructor
@@ -18,7 +20,7 @@ public class ArticleResponse {
     private LocalDateTime modifiedAt;
     private String content;
     private String description;
-    private Set<Tag> tags;
+    private List<String> tags;
     private Author author;
 
     @Builder
@@ -29,27 +31,7 @@ public class ArticleResponse {
         this.modifiedAt = modifiedAt;
         this.content = content;
         this.description = description;
-        this.tags = tags;
+        this.tags = tags.stream().map(Tag::getTagName).collect(Collectors.toList());
         this.author = author;
     }
-
-//    @Getter
-//    public static class Author {
-//        private final Long id;
-//        private final String name;
-//        private final String email;
-//        private final String image;
-//        private final String socialId;
-//        private final boolean following;
-//
-//        @Builder
-//        public Author(Long id, String name, String email, String image, String socialId, boolean following) {
-//            this.id = id;
-//            this.name = name;
-//            this.email = email;
-//            this.image = image;
-//            this.socialId = socialId;
-//            this.following = following;
-//        }
-//    }
-}
+ }

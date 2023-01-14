@@ -58,6 +58,7 @@ class ArticleServiceTest {
         articleRepository.deleteAll();
         userRepository.deleteAll();
     }
+
     @AfterEach
     void afterClean() {
         favoriteRepository.deleteAll();
@@ -66,6 +67,17 @@ class ArticleServiceTest {
         articleRepository.deleteAll();
         userRepository.deleteAll();
     }
+
+    private User createUser(String name) {
+        return User.builder()
+                .name(name)
+                .email("email")
+                .image("image")
+                .socialId("socialId")
+                .role(Role.USER)
+                .build();
+    }
+
     @Test
     @DisplayName("게시글 작성")
     public void 게시글_작성_성공() throws Exception {
@@ -197,10 +209,9 @@ class ArticleServiceTest {
                         .build())
                 .collect(Collectors.toList());
         articleRepository.saveAll(articles);
-        ArticleSearch articleSearch = ArticleSearch.builder()
+        ArticleSearch articleSearch = ArticleSearch.builder().author(savedUser.getId())
                 .page(1)
                 .size(10).build();
-
 
         //when
         List<ArticleResponse> list = articleService.getList(savedUser.getId(), articleSearch);
@@ -208,6 +219,161 @@ class ArticleServiceTest {
         //then
         assertThat(list.size()).isEqualTo(10);
     }
+
+    @Test
+    @DisplayName("태그로 게시글 조회")
+    public void 게시글_조회_태그() throws Exception {
+        //given
+        User user = createUser("회원1");
+        User user2 = createUser("회원2");
+        User savedUser = userRepository.save(user);
+        User savedUser2 = userRepository.save(user2);
+
+        List<String> tags = new ArrayList<>();
+        tags.add("tag1");
+        tags.add("tag2");
+
+        List<String> tags2 = new ArrayList<>();
+        tags2.add("tag2");
+        tags2.add("tag3");
+
+        for (int i = 0; i < 5; i++) {
+            ArticleCreate articleCreate = ArticleCreate.builder()
+                    .title("제목 " + (i + 1))
+                    .content("내용 " + (i + 1))
+                    .description("설명 " + (i + 1))
+                    .tags(tags)
+                    .build();
+            articleService.createArticle(savedUser.getId(), articleCreate);
+
+            ArticleCreate articleCreate2 = ArticleCreate.builder()
+                    .title("title " + (i + 1))
+                    .content("content " + (i + 1))
+                    .description("description " + (i + 1))
+                    .tags(tags2)
+                    .build();
+
+            articleService.createArticle(savedUser2.getId(), articleCreate2);
+        }
+
+        ArticleSearch articleSearch = ArticleSearch.builder()
+                .page(1)
+                .size(10)
+                .tag("tag2")
+                .build();
+
+        //when
+        List<ArticleResponse> list = articleService.getList(savedUser.getId(), articleSearch);
+
+        //then
+        assertThat(list.size()).isEqualTo(10);
+    }
+
+    @Test
+    @DisplayName("글쓴이 게시글 조회")
+    public void 게시글_조회_글쓴이() throws Exception {
+        //given
+        User user = createUser("회원1");
+        User user2 = createUser("회원2");
+        User savedUser = userRepository.save(user);
+        User savedUser2 = userRepository.save(user2);
+
+        List<String> tags = new ArrayList<>();
+        tags.add("tag1");
+        tags.add("tag2");
+
+        List<String> tags2 = new ArrayList<>();
+        tags2.add("tag2");
+        tags2.add("tag3");
+
+        for (int i = 0; i < 5; i++) {
+            ArticleCreate articleCreate = ArticleCreate.builder()
+                    .title("제목 " + (i + 1))
+                    .content("내용 " + (i + 1))
+                    .description("설명 " + (i + 1))
+                    .tags(tags)
+                    .build();
+            articleService.createArticle(savedUser.getId(), articleCreate);
+
+            ArticleCreate articleCreate2 = ArticleCreate.builder()
+                    .title("title " + (i + 1))
+                    .content("content " + (i + 1))
+                    .description("description " + (i + 1))
+                    .tags(tags2)
+                    .build();
+
+            articleService.createArticle(savedUser2.getId(), articleCreate2);
+        }
+
+        ArticleSearch articleSearch = ArticleSearch.builder()
+                .page(1)
+                .size(10)
+                .author(savedUser.getId())
+                .build();
+
+        //when
+        List<ArticleResponse> list = articleService.getList(savedUser.getId(), articleSearch);
+
+        //then
+        assertThat(list.size()).isEqualTo(5);
+        assertThat(list.get(0).getAuthor().getId()).isEqualTo(savedUser.getId());
+    }
+
+    @Test
+    @DisplayName("해당 회원이 좋아요 누른 게시글 조회")
+    public void 게시글_조회_좋아요() throws Exception {
+        //given
+        User user = createUser("회원1");
+        User user2 = createUser("회원2");
+        User savedUser = userRepository.save(user);
+        User savedUser2 = userRepository.save(user2);
+
+        List<String> tags = new ArrayList<>();
+        tags.add("tag1");
+        tags.add("tag2");
+
+        List<String> tags2 = new ArrayList<>();
+        tags2.add("tag2");
+        tags2.add("tag3");
+
+        List<Long> savedArticleIdList = new ArrayList<>();
+
+        for (int i = 0; i < 5; i++) {
+            ArticleCreate articleCreate = ArticleCreate.builder()
+                    .title("제목 " + (i + 1))
+                    .content("내용 " + (i + 1))
+                    .description("설명 " + (i + 1))
+                    .tags(tags)
+                    .build();
+            savedArticleIdList.add(articleService.createArticle(savedUser.getId(), articleCreate));
+
+            ArticleCreate articleCreate2 = ArticleCreate.builder()
+                    .title("title " + (i + 1))
+                    .content("content " + (i + 1))
+                    .description("description " + (i + 1))
+                    .tags(tags2)
+                    .build();
+
+            savedArticleIdList.add(articleService.createArticle(savedUser2.getId(), articleCreate2));
+        }
+        articleService.favoriteCreate(savedUser.getId(), savedArticleIdList.get(0));
+        articleService.favoriteCreate(savedUser.getId(), savedArticleIdList.get(1));
+
+        ArticleSearch articleSearch = ArticleSearch.builder()
+                .page(1)
+                .size(10)
+                .favorite(savedUser.getId())
+                .build();
+
+        //when
+        List<ArticleResponse> list = articleService.getList(savedUser.getId(), articleSearch);
+
+        //then
+        assertThat(list.size()).isEqualTo(2);
+        assertThat(list.get(0).getAuthor().getId()).isEqualTo(savedUser2.getId());
+        assertThat(list.get(1).getAuthor().getId()).isEqualTo(savedUser.getId());
+    }
+
 
     @Test
     @DisplayName("게시글 삭제")
@@ -471,4 +637,4 @@ class ArticleServiceTest {
 
         assertThat(favoriteException.getExceptionType().getMessage()).isEqualTo(FavoriteExceptionType.FAVORITE_NOT_FOUND.getMessage());
     }
- }
+}

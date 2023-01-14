@@ -15,6 +15,10 @@ public class ArticleSearch {
     @Builder.Default
     private Integer size = 10;
 
+    private String tag;
+    private Long favorite;
+    private Long author;
+
     public long getOffset() {
         return (long) (max(1, page) - 1) * min(size, MAX_SIZE);
     }
