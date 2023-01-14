@@ -95,7 +95,6 @@ class FollowRepositoryTest {
 
         // expected
         Assertions.assertThrows(DataIntegrityViolationException.class, () -> followRepository.save(follow2));
-
     }
 
     @Test
