@@ -28,12 +28,11 @@ public class ProfileController {
         profileService.follow(uid, request.getId());
     }
 
-    @DeleteMapping("/profiles/follow")
-    public void unfollow(HttpServletResponse response, @RequestBody FollowUser request) {
+    @DeleteMapping("/profiles/{userId}/follow")
+    public void unfollow(HttpServletResponse response, @PathVariable Long userId) {
         String authorization = response.getHeader("Authorization");
         Long uid = tokenService.getUid(authorization);
-
-        profileService.unFollow(uid, request.getId());
+        profileService.unFollow(uid, userId);
     }
 
     @GetMapping("/profiles/{userId}")

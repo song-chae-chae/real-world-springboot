@@ -113,10 +113,9 @@ class ProfileControllerTest {
         FollowUser followUser = FollowUser.builder().id(savedUser2.getId()).build();
 
         //expected
-        mockMvc.perform(delete("/profiles/follow")
+        mockMvc.perform(delete("/profiles/{userId}/follow", savedUser2.getId())
                         .header("Authorization", token.getToken())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(followUser)))
+                        .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andDo(print());
     }
