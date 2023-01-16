@@ -4,6 +4,8 @@ import com.chaechae.realworldspringboot.user.domain.User;
 import lombok.Builder;
 import lombok.Getter;
 
+import java.time.LocalDateTime;
+
 @Getter
 public class ProfileResponse {
     private final Long id;
@@ -11,6 +13,7 @@ public class ProfileResponse {
     private final String email;
     private final String image;
     private final String socialId;
+    private final LocalDateTime createdAt;
     private final boolean following;
 
     @Builder
@@ -20,6 +23,7 @@ public class ProfileResponse {
         this.email = user.getEmail();
         this.image = user.getImage();
         this.socialId = user.getSocialId();
+        this.createdAt = user.getCreatedAt();
         this.following = following;
     }
 }
