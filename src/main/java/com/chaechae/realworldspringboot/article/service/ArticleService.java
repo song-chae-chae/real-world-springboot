@@ -74,8 +74,9 @@ public class ArticleService {
     }
 
     @Transactional(readOnly = true)
-    public Article get(Long id) {
-        return articleRepository.findById(id).orElseThrow(() -> new ArticleException(ArticleExceptionType.ARTICLE_NOT_FOUND));
+    public ArticleResponse get(Long authId, Long articleId) {
+        Article article = articleRepository.findById(articleId).orElseThrow(() -> new ArticleException(ArticleExceptionType.ARTICLE_NOT_FOUND));
+        return convertArticleResponse(authId, article);
     }
 
     @Transactional
@@ -107,6 +108,7 @@ public class ArticleService {
 
     private ArticleResponse convertArticleResponse(Long authId, Article article) {
         ProfileResponse profileResponse = profileService.get(authId, article.getUser().getId());
+        Long favoritesCount = favoriteRepository.countByArticleId(article.getId());
 
         return ArticleResponse.builder()
                 .id(article.getId())
@@ -116,17 +118,26 @@ public class ArticleService {
                 .content(article.getContent())
                 .description(article.getDescription())
                 .tags(article.getTags())
+                .isFavorite(isFavorite(authId, article.getId()))
+                .favoritesCount(favoritesCount)
                 .author(Author.builder()
                         .id(profileResponse.getId())
                         .name(profileResponse.getName())
                         .image(profileResponse.getImage())
                         .email(profileResponse.getEmail())
                         .socialId(profileResponse.getSocialId())
+                        .createdAt(profileResponse.getCreatedAt())
                         .following(profileResponse.isFollowing())
                         .build())
                 .build();
     }
+    private boolean isFavorite(Long authId, Long articleId) {
+        if (authId == null) {
+            return false;
+        }
 
+        return favoriteRepository.findByArticleIdAndUserId(articleId, authId).isPresent();
+    }
     public Long createComment(Long authId, Long articleId, CommentCreate commentCreate) {
         Article savedArticle = articleRepository.findById(articleId)
                 .orElseThrow(() -> new ArticleException(ArticleExceptionType.ARTICLE_NOT_FOUND));

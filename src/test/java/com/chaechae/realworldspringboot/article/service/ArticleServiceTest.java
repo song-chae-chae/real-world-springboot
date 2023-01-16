@@ -179,12 +179,12 @@ class ArticleServiceTest {
         Long savedArticleId = articleService.createArticle(savedUser.getId(), articleCreate);
 
         //when
-        Article article = articleService.get(savedArticleId);
+        ArticleResponse articleResponse = articleService.get(savedUser.getId(), savedArticleId);
 
         //then
-        assertThat(article.getTitle()).isEqualTo("제목");
-        assertThat(article.getContent()).isEqualTo("내용");
-        assertThat(new ArrayList<>(article.getTags()).get(0).getTagName()).isEqualTo("tag");
+        assertThat(articleResponse.getTitle()).isEqualTo("제목");
+        assertThat(articleResponse.getContent()).isEqualTo("내용");
+        assertThat(articleResponse.getTags().get(0)).isEqualTo("tag");
     }
 
     @Test
@@ -405,7 +405,7 @@ class ArticleServiceTest {
 
         //then
         assertThrows(ArticleException.class, () -> {
-            articleService.get(savedArticleId);
+            articleService.get(savedUser.getId(), savedArticleId);
         });
     }
 

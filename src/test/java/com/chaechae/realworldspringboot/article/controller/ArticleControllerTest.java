@@ -200,10 +200,34 @@ class ArticleControllerTest {
     @DisplayName("게시글 단건 조회")
     public void 게시글_단건_조회() throws Exception {
         //given
+        User user = createUser("회원1");
+        User savedUser = userRepository.save(user);
 
-        //when
+        Token token = tokenService.generateToken(savedUser.getId(), "USER");
 
-        //then
+        List<String> tags = new ArrayList<>();
+        tags.add("tag1");
+        tags.add("tag2");
+
+        List<Long> savedArticleIdList = new ArrayList<>();
+        for (int i = 0; i < 5; i++) {
+            ArticleCreate articleCreate = ArticleCreate.builder()
+                    .title("제목 " + (i + 1))
+                    .content("내용 " + (i + 1))
+                    .description("설명 " + (i + 1))
+                    .tags(tags)
+                    .build();
+            savedArticleIdList.add(articleService.createArticle(savedUser.getId(), articleCreate));
+        }
+
+        //expected
+        mockMvc.perform(get("/articles/{articleId}", savedArticleIdList.get(0))
+                        .header("Authorization", token.getToken())
+                        .contentType(APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(savedArticleIdList.get(0)))
+                .andExpect(jsonPath("$.content").value("내용 1"))
+                .andDo(print());
     }
 
     @Test

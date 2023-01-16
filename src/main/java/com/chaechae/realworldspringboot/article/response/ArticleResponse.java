@@ -21,10 +21,12 @@ public class ArticleResponse {
     private String content;
     private String description;
     private List<String> tags;
+    private boolean isFavorite;
+    private Long favoritesCount;
     private Author author;
 
     @Builder
-    public ArticleResponse(Long id, String title, LocalDateTime createdAt, LocalDateTime modifiedAt, String content, String description, Set<Tag> tags, Author author) {
+    public ArticleResponse(Long id, String title, LocalDateTime createdAt, LocalDateTime modifiedAt, String content, String description, Set<Tag> tags, boolean isFavorite, Long favoritesCount, Author author) {
         this.id = id;
         this.title = title;
         this.createdAt = createdAt;
@@ -32,6 +34,8 @@ public class ArticleResponse {
         this.content = content;
         this.description = description;
         this.tags = tags.stream().map(Tag::getTagName).collect(Collectors.toList());
+        this.isFavorite = isFavorite;
+        this.favoritesCount = favoritesCount;
         this.author = author;
     }
- }
+}

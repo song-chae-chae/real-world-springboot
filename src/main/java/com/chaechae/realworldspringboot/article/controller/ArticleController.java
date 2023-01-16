@@ -1,5 +1,6 @@
 package com.chaechae.realworldspringboot.article.controller;
 
+import com.chaechae.realworldspringboot.article.domain.Article;
 import com.chaechae.realworldspringboot.article.request.*;
 import com.chaechae.realworldspringboot.article.response.ArticleResponse;
 import com.chaechae.realworldspringboot.article.response.CommentResponse;
@@ -19,8 +20,15 @@ public class ArticleController {
     private final ArticleService articleService;
 
     @PostMapping("/articles")
-    public void createArticle(@AuthenticationPrincipal UserLoginResponse authUser, @Valid @RequestBody ArticleCreate request) {
-        articleService.createArticle(authUser.getId(), request);
+    public ResponseEntity<Long> createArticle(@AuthenticationPrincipal UserLoginResponse authUser, @Valid @RequestBody ArticleCreate request) {
+        Long articleId = articleService.createArticle(authUser.getId(), request);
+        return ResponseEntity.status(200).body(articleId);
+    }
+
+    @GetMapping("/articles/{articleId}")
+    public ResponseEntity<ArticleResponse> getArticle(@AuthenticationPrincipal UserLoginResponse authUser, @PathVariable Long articleId) {
+        ArticleResponse articleResponse = articleService.get(authUser.getId(), articleId);
+        return ResponseEntity.status(200).body(articleResponse);
     }
 
     @PutMapping("/articles/{articleId}")
