@@ -50,6 +50,9 @@ public class ProfileService {
     }
 
     public boolean isFollowed(Long authId, Long userId) {
+        if (authId == null) {
+            return false;
+        }
         return followRepository.findByFollowerIdAndFollowedId(authId, userId).isPresent();
     }
 }
