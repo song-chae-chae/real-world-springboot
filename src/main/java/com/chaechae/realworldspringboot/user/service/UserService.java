@@ -11,7 +11,6 @@ import com.chaechae.realworldspringboot.user.request.UpdateUserRequest;
 import com.chaechae.realworldspringboot.user.response.SocialAuthResponse;
 import com.chaechae.realworldspringboot.user.response.SocialUserResponse;
 import com.chaechae.realworldspringboot.user.response.UserLoginResponse;
-import com.chaechae.realworldspringboot.user.response.UserResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -53,9 +52,12 @@ public class UserService {
     }
 
     @Transactional
-    public void updateUser(UpdateUserRequest request) {
-        User savedUser = userRepository.findById(request.getId()).orElseThrow(() -> new UserException(UserExceptionType.USER_NOT_FOUND));
+    public void updateUser(UserLoginResponse authUser, UpdateUserRequest request) {
+        if (!authUser.getId().equals(request.getId())) {
+            throw new UserException(UserExceptionType.USER_UNAUTHORIZED);
+        }
 
+        User savedUser = userRepository.findById(request.getId()).orElseThrow(() -> new UserException(UserExceptionType.USER_NOT_FOUND));
         savedUser.update(request);
     }
 }

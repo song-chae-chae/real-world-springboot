@@ -7,6 +7,7 @@ import com.chaechae.realworldspringboot.user.exception.UserExceptionType;
 import com.chaechae.realworldspringboot.user.repository.UserRepository;
 import com.chaechae.realworldspringboot.user.request.UpdateUserRequest;
 import com.chaechae.realworldspringboot.user.response.SocialUserResponse;
+import com.chaechae.realworldspringboot.user.response.UserLoginResponse;
 import com.chaechae.realworldspringboot.user.response.UserResponse;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.AfterEach;
@@ -108,9 +109,9 @@ class UserServiceTest {
                 .id(user.getId())
                 .email("email-update")
                 .image("image-update").build();
-
+        UserLoginResponse userLoginResponse = UserLoginResponse.builder().id(user.getId()).build();
         //when
-        userService.updateUser(userRequest);
+        userService.updateUser(userLoginResponse, userRequest);
 
         User savedUser = userRepository.findById(user.getId()).orElseThrow(() -> new UserException(UserExceptionType.USER_NOT_FOUND));
 
@@ -132,9 +133,11 @@ class UserServiceTest {
                 .image("image-update")
                 .build();
 
+        UserLoginResponse userLoginResponse = UserLoginResponse.builder().id(user.getId()).build();
+
         //expected
         assertThrows(UserException.class, () -> {
-            userService.updateUser(userRequest);
+            userService.updateUser(userLoginResponse, userRequest);
         });
     }
 }
