@@ -21,24 +21,18 @@ public class ProfileController {
     private final TokenService tokenService;
 
     @PostMapping("/profiles/follow")
-    public void follow(HttpServletResponse response, @RequestBody FollowUser request) {
-        String authorization = response.getHeader("Authorization");
-        Long uid = tokenService.getUid(authorization);
-
-        profileService.follow(uid, request.getId());
+    public void follow(@AuthenticationPrincipal UserLoginResponse authUser, @RequestBody FollowUser request) {
+        profileService.follow(authUser.getId(), request.getId());
     }
 
     @DeleteMapping("/profiles/{userId}/follow")
-    public void unfollow(HttpServletResponse response, @PathVariable Long userId) {
-        String authorization = response.getHeader("Authorization");
-        Long uid = tokenService.getUid(authorization);
-        profileService.unFollow(uid, userId);
+    public void unfollow(@AuthenticationPrincipal UserLoginResponse authUser, @PathVariable Long userId) {
+        profileService.unFollow(authUser.getId(), userId);
     }
 
     @GetMapping("/profiles/{userId}")
     public ResponseEntity<ProfileResponse> get(@AuthenticationPrincipal UserLoginResponse authUser, @PathVariable("userId") Long userId) {
-        Long authId = authUser.getId();
-        ProfileResponse profileResponse = profileService.get(authId, userId);
+        ProfileResponse profileResponse = profileService.get(authUser, userId);
 
         return ResponseEntity.status(200).body(profileResponse);
     }

@@ -8,6 +8,7 @@ import com.chaechae.realworldspringboot.profile.response.ProfileResponse;
 import com.chaechae.realworldspringboot.user.domain.Role;
 import com.chaechae.realworldspringboot.user.domain.User;
 import com.chaechae.realworldspringboot.user.repository.UserRepository;
+import com.chaechae.realworldspringboot.user.response.UserLoginResponse;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -96,9 +97,10 @@ class ProfileServiceTest {
         User user2 = createUser("회원2");
         User savedUser1 = userRepository.save(user1);
         User savedUser2 = userRepository.save(user2);
+        UserLoginResponse userLoginResponse = UserLoginResponse.builder().id(user1.getId()).build();
 
         // when
-        ProfileResponse profileResponse = profileService.get(savedUser1.getId(), savedUser2.getId());
+        ProfileResponse profileResponse = profileService.get(userLoginResponse, savedUser2.getId());
 
         // then
         assertThat(profileResponse.getId()).isEqualTo(savedUser2.getId());
@@ -116,8 +118,10 @@ class ProfileServiceTest {
 
         profileService.follow(savedUser1.getId(), savedUser2.getId());
 
+        UserLoginResponse userLoginResponse = UserLoginResponse.builder().id(user1.getId()).build();
+
         // when
-        ProfileResponse profileResponse = profileService.get(savedUser1.getId(), savedUser2.getId());
+        ProfileResponse profileResponse = profileService.get(userLoginResponse, savedUser2.getId());
 
         // then
         assertThat(profileResponse.getId()).isEqualTo(savedUser2.getId());

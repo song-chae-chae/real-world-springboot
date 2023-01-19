@@ -9,6 +9,7 @@ import com.chaechae.realworldspringboot.user.domain.User;
 import com.chaechae.realworldspringboot.user.exception.UserException;
 import com.chaechae.realworldspringboot.user.exception.UserExceptionType;
 import com.chaechae.realworldspringboot.user.repository.UserRepository;
+import com.chaechae.realworldspringboot.user.response.UserLoginResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -40,19 +41,19 @@ public class ProfileService {
         followRepository.delete(following);
     }
 
-    public ProfileResponse get(Long authId, Long userId) {
+    public ProfileResponse get(UserLoginResponse authUser, Long userId) {
         User findUser = userRepository.findById(userId).orElseThrow(() -> new UserException(UserExceptionType.USER_NOT_FOUND));
 
         return ProfileResponse.builder()
                 .user(findUser)
-                .following(isFollowed(authId, userId))
+                .following(isFollowed(authUser, userId))
                 .build();
     }
 
-    public boolean isFollowed(Long authId, Long userId) {
-        if (authId == null) {
+    public boolean isFollowed(UserLoginResponse authUser, Long userId) {
+        if (authUser == null) {
             return false;
         }
-        return followRepository.findByFollowerIdAndFollowedId(authId, userId).isPresent();
+        return followRepository.findByFollowerIdAndFollowedId(authUser.getId(), userId).isPresent();
     }
 }
