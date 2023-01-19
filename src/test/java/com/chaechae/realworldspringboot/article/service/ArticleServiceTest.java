@@ -12,9 +12,11 @@ import com.chaechae.realworldspringboot.article.repository.TagRepository;
 import com.chaechae.realworldspringboot.article.request.*;
 import com.chaechae.realworldspringboot.article.response.ArticleResponse;
 import com.chaechae.realworldspringboot.article.response.CommentResponse;
+import com.chaechae.realworldspringboot.article.response.MultipleArticleResponse;
 import com.chaechae.realworldspringboot.user.domain.Role;
 import com.chaechae.realworldspringboot.user.domain.User;
 import com.chaechae.realworldspringboot.user.repository.UserRepository;
+import com.chaechae.realworldspringboot.user.response.UserLoginResponse;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -139,9 +141,9 @@ class ArticleServiceTest {
         Article savedArticle = articleRepository.findById(savedArticleId).get();
 
         //when
-        Set<Tag> updateTags = new HashSet<>();
-        updateTags.add(Tag.builder().tagName("tag1").build());
-        updateTags.add(Tag.builder().tagName("tag2").build());
+        List<String> updateTags = new ArrayList<>();
+        updateTags.add("tag1");
+        updateTags.add("tag2");
 
         ArticleUpdate articleUpdate = ArticleUpdate.builder().title("제목-update").description("설명- update").content("내용-update").tags(updateTags).build();
         articleService.updateArticle(savedUser.getId(), savedArticle.getId(), articleUpdate);
@@ -177,9 +179,10 @@ class ArticleServiceTest {
                 .build();
 
         Long savedArticleId = articleService.createArticle(savedUser.getId(), articleCreate);
+        UserLoginResponse userLoginResponse = UserLoginResponse.builder().id(savedUser.getId()).build();
 
         //when
-        ArticleResponse articleResponse = articleService.get(savedUser.getId(), savedArticleId);
+        ArticleResponse articleResponse = articleService.get(userLoginResponse, savedArticleId);
 
         //then
         assertThat(articleResponse.getTitle()).isEqualTo("제목");
@@ -212,12 +215,12 @@ class ArticleServiceTest {
         ArticleSearch articleSearch = ArticleSearch.builder().author(savedUser.getId())
                 .page(1)
                 .size(10).build();
-
+        UserLoginResponse userLoginResponse = UserLoginResponse.builder().id(savedUser.getId()).build();
         //when
-        List<ArticleResponse> list = articleService.getList(savedUser.getId(), articleSearch);
+        MultipleArticleResponse list = articleService.getList(userLoginResponse, articleSearch);
 
         //then
-        assertThat(list.size()).isEqualTo(10);
+        assertThat(list.getArticles().size()).isEqualTo(10);
     }
 
     @Test
@@ -262,11 +265,12 @@ class ArticleServiceTest {
                 .tag("tag2")
                 .build();
 
+        UserLoginResponse userLoginResponse = UserLoginResponse.builder().id(savedUser.getId()).build();
         //when
-        List<ArticleResponse> list = articleService.getList(savedUser.getId(), articleSearch);
+        MultipleArticleResponse list = articleService.getList(userLoginResponse, articleSearch);
 
         //then
-        assertThat(list.size()).isEqualTo(10);
+        assertThat(list.getArticles().size()).isEqualTo(10);
     }
 
     @Test
@@ -311,12 +315,13 @@ class ArticleServiceTest {
                 .author(savedUser.getId())
                 .build();
 
+        UserLoginResponse userLoginResponse = UserLoginResponse.builder().id(savedUser.getId()).build();
         //when
-        List<ArticleResponse> list = articleService.getList(savedUser.getId(), articleSearch);
+        MultipleArticleResponse list = articleService.getList(userLoginResponse, articleSearch);
 
         //then
-        assertThat(list.size()).isEqualTo(5);
-        assertThat(list.get(0).getAuthor().getId()).isEqualTo(savedUser.getId());
+        assertThat(list.getArticles().size()).isEqualTo(5);
+        assertThat(list.getArticles().get(0).getAuthor().getId()).isEqualTo(savedUser.getId());
     }
 
     @Test
@@ -364,14 +369,15 @@ class ArticleServiceTest {
                 .size(10)
                 .favorite(savedUser.getId())
                 .build();
+        UserLoginResponse userLoginResponse = UserLoginResponse.builder().id(savedUser.getId()).build();
 
         //when
-        List<ArticleResponse> list = articleService.getList(savedUser.getId(), articleSearch);
+        MultipleArticleResponse list = articleService.getList(userLoginResponse, articleSearch);
 
         //then
-        assertThat(list.size()).isEqualTo(2);
-        assertThat(list.get(0).getAuthor().getId()).isEqualTo(savedUser2.getId());
-        assertThat(list.get(1).getAuthor().getId()).isEqualTo(savedUser.getId());
+        assertThat(list.getArticles().size()).isEqualTo(2);
+        assertThat(list.getArticles().get(0).getAuthor().getId()).isEqualTo(savedUser2.getId());
+        assertThat(list.getArticles().get(1).getAuthor().getId()).isEqualTo(savedUser.getId());
     }
 
 
@@ -399,13 +405,13 @@ class ArticleServiceTest {
                 .build();
 
         Long savedArticleId = articleService.createArticle(savedUser.getId(), articleCreate);
-
+        UserLoginResponse userLoginResponse = UserLoginResponse.builder().id(savedUser.getId()).build();
         //when
         articleService.deleteArticle(savedUser.getId(), savedArticleId);
 
         //then
         assertThrows(ArticleException.class, () -> {
-            articleService.get(savedUser.getId(), savedArticleId);
+            articleService.get(userLoginResponse, savedArticleId);
         });
     }
 
@@ -557,8 +563,9 @@ class ArticleServiceTest {
         Long commentId = articleService.createComment(savedUser.getId(), savedArticleId, commentCreate);
         Long commentId2 = articleService.createComment(savedUser.getId(), savedArticleId, commentCreate2);
 
+        UserLoginResponse userLoginResponse = UserLoginResponse.builder().id(savedUser.getId()).build();
         //when
-        List<CommentResponse> commentList = articleService.getCommentList(savedUser.getId(), savedArticleId);
+        List<CommentResponse> commentList = articleService.getCommentList(userLoginResponse, savedArticleId);
 
         //then
         assertThat(commentList.size()).isEqualTo(2);

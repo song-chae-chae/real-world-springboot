@@ -51,7 +51,6 @@ public class Article extends BaseEntity {
         this.title = request.getTitle();
         this.content = request.getContent();
         this.description = request.getDescription();
-        this.tags = request.getTags() == null ? this.tags : request.getTags();
     }
 
     @Override

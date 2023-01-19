@@ -1,9 +1,9 @@
 package com.chaechae.realworldspringboot.article.controller;
 
-import com.chaechae.realworldspringboot.article.domain.Article;
 import com.chaechae.realworldspringboot.article.request.*;
 import com.chaechae.realworldspringboot.article.response.ArticleResponse;
 import com.chaechae.realworldspringboot.article.response.CommentResponse;
+import com.chaechae.realworldspringboot.article.response.MultipleArticleResponse;
 import com.chaechae.realworldspringboot.article.service.ArticleService;
 import com.chaechae.realworldspringboot.user.response.UserLoginResponse;
 import lombok.RequiredArgsConstructor;
@@ -27,7 +27,7 @@ public class ArticleController {
 
     @GetMapping("/articles/{articleId}")
     public ResponseEntity<ArticleResponse> getArticle(@AuthenticationPrincipal UserLoginResponse authUser, @PathVariable Long articleId) {
-        ArticleResponse articleResponse = articleService.get(authUser.getId(), articleId);
+        ArticleResponse articleResponse = articleService.get(authUser, articleId);
         return ResponseEntity.status(200).body(articleResponse);
     }
 
@@ -42,22 +42,22 @@ public class ArticleController {
     }
 
     @GetMapping("/articles")
-    public ResponseEntity<List<ArticleResponse>> getAllArticles(@AuthenticationPrincipal UserLoginResponse authUser, @ModelAttribute ArticleSearch articleSearch) {
-        List<ArticleResponse> list = articleService.getList(authUser.getId(), articleSearch);
+    public ResponseEntity<MultipleArticleResponse> getAllArticles(@AuthenticationPrincipal UserLoginResponse authUser, @ModelAttribute ArticleSearch articleSearch) {
+        MultipleArticleResponse list = articleService.getList(authUser, articleSearch);
 
         return ResponseEntity.status(200).body(list);
     }
 
     @GetMapping("/articles/feed")
-    public ResponseEntity<List<ArticleResponse>> getFeed(@AuthenticationPrincipal UserLoginResponse authUser, @ModelAttribute ArticleSearch articleSearch) {
-        List<ArticleResponse> feed = articleService.getFeed(authUser.getId(), articleSearch);
+    public ResponseEntity<MultipleArticleResponse> getFeed(@AuthenticationPrincipal UserLoginResponse authUser, @ModelAttribute ArticleSearch articleSearch) {
+        MultipleArticleResponse feed = articleService.getFeed(authUser, articleSearch);
 
         return ResponseEntity.status(200).body(feed);
     }
 
     @GetMapping("/articles/{articleId}/comments")
     public ResponseEntity<List<CommentResponse>> getComments(@AuthenticationPrincipal UserLoginResponse authUser, @PathVariable Long articleId) {
-        List<CommentResponse> list = articleService.getCommentList(authUser.getId(), articleId);
+        List<CommentResponse> list = articleService.getCommentList(authUser, articleId);
         return ResponseEntity.status(200).body(list);
     }
 

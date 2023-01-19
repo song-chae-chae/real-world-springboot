@@ -12,12 +12,15 @@ import com.chaechae.realworldspringboot.article.repository.TagRepository;
 import com.chaechae.realworldspringboot.article.request.*;
 import com.chaechae.realworldspringboot.article.response.ArticleResponse;
 import com.chaechae.realworldspringboot.article.response.CommentResponse;
+import com.chaechae.realworldspringboot.article.response.MultipleArticleResponse;
 import com.chaechae.realworldspringboot.article.response.author.Author;
 import com.chaechae.realworldspringboot.profile.response.ProfileResponse;
 import com.chaechae.realworldspringboot.profile.service.ProfileService;
 import com.chaechae.realworldspringboot.user.domain.User;
+import com.chaechae.realworldspringboot.user.response.UserLoginResponse;
 import com.chaechae.realworldspringboot.user.service.UserService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -47,11 +50,7 @@ public class ArticleService {
         Article save = articleRepository.save(article);
 
         if (request.getTags() != null) {
-            for (int i = 0; i < request.getTags().size(); i++) {
-                Tag tag = convertTag(request.getTags().get(i));
-                tag.setArticle(article);
-                tagRepository.save(tag);
-            }
+            saveTag(save, request.getTags());
         }
 
         return save.getId();
@@ -70,13 +69,25 @@ public class ArticleService {
             throw new ArticleException(ArticleExceptionType.ARTICLE_UNAUTHORIZED);
         }
 
+        if (request.getTags() != null) {
+            tagRepository.deleteByArticleId(articleId);
+            saveTag(savedArticle, request.getTags());
+        }
+
         savedArticle.update(request);
     }
 
+    private void saveTag(Article article, List<String> tagList) {
+        for (String tagName : tagList) {
+            Tag tag = convertTag(tagName);
+            tag.setArticle(article);
+            tagRepository.save(tag);
+        }
+    }
     @Transactional(readOnly = true)
-    public ArticleResponse get(Long authId, Long articleId) {
+    public ArticleResponse get(UserLoginResponse authUser, Long articleId) {
         Article article = articleRepository.findById(articleId).orElseThrow(() -> new ArticleException(ArticleExceptionType.ARTICLE_NOT_FOUND));
-        return convertArticleResponse(authId, article);
+        return convertArticleResponse(authUser, article);
     }
 
     @Transactional
@@ -91,23 +102,31 @@ public class ArticleService {
     }
 
     @Transactional(readOnly = true)
-    public List<ArticleResponse> getList(Long authId, ArticleSearch articleSearch) {
+    public MultipleArticleResponse getList(UserLoginResponse authUser, ArticleSearch articleSearch) {
         List<Article> articleList;
+        Page<Article> articlePage;
+
         if (articleSearch.getAuthor() != null) {
-            articleList = articleRepository.getArticleListByAuthor(articleSearch);
+            articlePage = articleRepository.getArticleListByAuthor(articleSearch);
         } else if (articleSearch.getFavorite() != null) {
-            articleList = articleRepository.getArticleListByUserFavorite(articleSearch);
+            articlePage = articleRepository.getArticleListByUserFavorite(articleSearch);
         } else if (articleSearch.getTag() != null) {
-            articleList = articleRepository.getArticleListByTag(articleSearch);
+            articlePage = articleRepository.getArticleListByTag(articleSearch);
         } else {
-            articleList = articleRepository.getList(articleSearch);
+            articlePage = articleRepository.getList(articleSearch);
         }
 
-        return articleList.stream().map(i -> convertArticleResponse(authId, i)).collect(Collectors.toList());
+        articleList = articlePage.getContent();
+
+        List<ArticleResponse> articleResponses = articleList.stream().map(i -> convertArticleResponse(authUser, i)).collect(Collectors.toList());
+        return MultipleArticleResponse.builder()
+                .articles(articleResponses)
+                .totalCount(articlePage.getTotalElements())
+                .build();
     }
 
-    private ArticleResponse convertArticleResponse(Long authId, Article article) {
-        ProfileResponse profileResponse = profileService.get(authId, article.getUser().getId());
+    private ArticleResponse convertArticleResponse(UserLoginResponse authUser, Article article) {
+        ProfileResponse profileResponse = profileService.get(authUser, article.getUser().getId());
         Long favoritesCount = favoriteRepository.countByArticleId(article.getId());
 
         return ArticleResponse.builder()
@@ -118,7 +137,7 @@ public class ArticleService {
                 .content(article.getContent())
                 .description(article.getDescription())
                 .tags(article.getTags())
-                .isFavorite(isFavorite(authId, article.getId()))
+                .isFavorite(isFavorite(authUser, article.getId()))
                 .favoritesCount(favoritesCount)
                 .author(Author.builder()
                         .id(profileResponse.getId())
@@ -131,13 +150,15 @@ public class ArticleService {
                         .build())
                 .build();
     }
-    private boolean isFavorite(Long authId, Long articleId) {
-        if (authId == null) {
+
+    private boolean isFavorite(UserLoginResponse authUser, Long articleId) {
+        if (authUser == null) {
             return false;
         }
 
-        return favoriteRepository.findByArticleIdAndUserId(articleId, authId).isPresent();
+        return favoriteRepository.findByArticleIdAndUserId(articleId, authUser.getId()).isPresent();
     }
+
     public Long createComment(Long authId, Long articleId, CommentCreate commentCreate) {
         Article savedArticle = articleRepository.findById(articleId)
                 .orElseThrow(() -> new ArticleException(ArticleExceptionType.ARTICLE_NOT_FOUND));
@@ -195,14 +216,14 @@ public class ArticleService {
         favoriteRepository.delete(savedFavorite);
     }
 
-    public List<CommentResponse> getCommentList(Long authId, Long articleId) {
+    public List<CommentResponse> getCommentList(UserLoginResponse authUser, Long articleId) {
         List<Comment> comments = commentRepository.findByArticleId(articleId);
 
-        return comments.stream().map(comment -> convertCommentResponse(authId, comment)).collect(Collectors.toList());
+        return comments.stream().map(comment -> convertCommentResponse(authUser, comment)).collect(Collectors.toList());
     }
 
-    private CommentResponse convertCommentResponse(Long authId, Comment comment) {
-        ProfileResponse profileResponse = profileService.get(authId, comment.getUser().getId());
+    private CommentResponse convertCommentResponse(UserLoginResponse authUser, Comment comment) {
+        ProfileResponse profileResponse = profileService.get(authUser, comment.getUser().getId());
         return CommentResponse.builder()
                 .id(comment.getId())
                 .createdAt(comment.getCreatedAt())
@@ -212,9 +233,19 @@ public class ArticleService {
                 .build();
     }
 
-    public List<ArticleResponse> getFeed(Long authId, ArticleSearch articleSearch) {
-        List<Article> feed = articleRepository.getFeed(authId, articleSearch);
-        System.out.println("feed count " + feed.size());
-        return feed.stream().map(article -> convertArticleResponse(authId, article)).collect(Collectors.toList());
+    public MultipleArticleResponse getFeed(UserLoginResponse authUser, ArticleSearch articleSearch) {
+        if (authUser != null) {
+            Page<Article> feed = articleRepository.getFeed(authUser.getId(), articleSearch);
+
+            List<ArticleResponse> articleResponseList = feed.getContent()
+                    .stream()
+                    .map(article -> convertArticleResponse(authUser, article))
+                    .collect(Collectors.toList());
+
+            return MultipleArticleResponse.builder()
+                    .articles(articleResponseList)
+                    .totalCount(feed.getTotalElements()).build();
+        }
+        return null;
     }
 }

@@ -155,7 +155,7 @@ class ArticleControllerTest {
                 .content("내용")
                 .tags(tags)
                 .build();
-        System.out.println("tlqkf : " + objectMapper.writeValueAsString(create));
+
         //expected
         mockMvc.perform(post("/articles")
                         .header("Authorization", token.getToken())
@@ -255,9 +255,9 @@ class ArticleControllerTest {
                         .param("page", "1")
                         .param("size", "10"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()", Matchers.is(10)))
-                .andExpect(jsonPath("$[0].title").value("제목 30"))
-                .andExpect(jsonPath("$[0].content").value("내용 30"))
+                .andExpect(jsonPath("$.articles.length()", Matchers.is(10)))
+                .andExpect(jsonPath("$.articles[0].title").value("제목 30"))
+                .andExpect(jsonPath("$.articles[0].content").value("내용 30"))
                 .andDo(print());
     }
 
@@ -306,7 +306,7 @@ class ArticleControllerTest {
                         .param("size", "10")
                         .param("tag", "tag2"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(10)))
+                .andExpect(jsonPath("$.articles", hasSize(10)))
                 .andDo(print());
     }
 
@@ -355,7 +355,7 @@ class ArticleControllerTest {
                         .param("size", "10")
                         .param("author", String.valueOf(savedUser.getId())))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(5)))
+                .andExpect(jsonPath("$.articles", hasSize(5)))
                 .andDo(print());
     }
 
@@ -408,9 +408,9 @@ class ArticleControllerTest {
                         .param("size", "10")
                         .param("favorite", String.valueOf(savedUser.getId())))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(2)))
-                .andExpect(jsonPath("$[0].content").value(articleRepository.findById(savedArticleIdList.get(1)).get().getContent()))
-                .andExpect(jsonPath("$[1].content").value(articleRepository.findById(savedArticleIdList.get(0)).get().getContent()))
+                .andExpect(jsonPath("$.articles", hasSize(2)))
+                .andExpect(jsonPath("$.articles[0].content").value(articleRepository.findById(savedArticleIdList.get(1)).get().getContent()))
+                .andExpect(jsonPath("$.articles[1].content").value(articleRepository.findById(savedArticleIdList.get(0)).get().getContent()))
                 .andDo(print());
     }
 
@@ -476,7 +476,7 @@ class ArticleControllerTest {
                         .param("page", "1")
                         .param("size", "10"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(10)))
+                .andExpect(jsonPath("$.articles", hasSize(10)))
                 .andDo(print());
     }
 
