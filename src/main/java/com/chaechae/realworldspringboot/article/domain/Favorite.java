@@ -1,5 +1,6 @@
 package com.chaechae.realworldspringboot.article.domain;
 
+import com.chaechae.realworldspringboot.base.BaseEntity;
 import com.chaechae.realworldspringboot.user.domain.User;
 import lombok.Builder;
 import lombok.Getter;
@@ -10,7 +11,7 @@ import javax.persistence.*;
 @Entity
 @Getter
 @NoArgsConstructor
-public class Favorite {
+public class Favorite extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
